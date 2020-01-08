@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/measures/statisticsdata.hpp>
 #include <ored/portfolio/trade.hpp>
 #include <qle/instruments/payment.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
@@ -75,6 +76,10 @@ void Trade::addPayment(std::vector<boost::shared_ptr<Instrument>>& addInstrument
     legCurrencies_.push_back(fee->currency().code());
     // amount comes with its correct sign, avoid switching by saying payer=false
     legPayers_.push_back(false);
+}
+
+boost::shared_ptr<const StatisticsData> Trade::statistics(boost::shared_ptr<Market> /*market*/) const {
+    return boost::shared_ptr<const StatisticsData>(new StatisticsData{});
 }
 
 } // namespace data

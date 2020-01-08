@@ -61,6 +61,7 @@
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/marketdata/yieldvolcurve.hpp>
+#include <ored/measures/statisticsdata.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
 #include <ored/model/eqbsbuilder.hpp>

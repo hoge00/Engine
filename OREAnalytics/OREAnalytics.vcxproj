@@ -4,7 +4,7 @@
     <ProjectConfiguration Include="Debug (static runtime)|Win32">
       <Configuration>Debug (static runtime)</Configuration>
       <Platform>Win32</Platform>
-    </ProjectConfiguration>
+    </ProjectConfigurations>
     <ProjectConfiguration Include="Debug (static runtime)|x64">
       <Configuration>Debug (static runtime)</Configuration>
       <Platform>x64</Platform>

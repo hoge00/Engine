@@ -19,17 +19,20 @@
 */
 
 #include <boost/lexical_cast.hpp>
+#include <ored/marketdata/market.hpp>
+#include <ored/measures/statisticsdata.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/fixingdates.hpp>
+#include <ored/portfolio/instrumentwrapper.hpp>
 #include <ored/portfolio/legdata.hpp>
-#include <ored/portfolio/swap.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/instruments/bond.hpp>
 #include <ql/instruments/bonds/zerocouponbond.hpp>
+#include <ql/pricingengines/bond/bondfunctions.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -65,8 +68,6 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // Clear the separateLegs_ member here. Should be done in reset() but it is not virtual
     separateLegs_.clear();
-
-    const boost::shared_ptr<Market> market = engineFactory->market();
 
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
 
@@ -183,5 +184,55 @@ XMLNode* Bond::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(bondNode, c.toXML(doc));
     return node;
 }
+
+bool Bond::isZeroBond() const {
+    return coupons_.size() == 0;
+}
+
+boost::shared_ptr<const StatisticsData> Bond::statistics(boost::shared_ptr<Market> market) const {
+    if (isZeroBond()) {
+        // Only calculate for coupon bonds
+        return boost::shared_ptr<const StatisticsData>{new StatisticsData{}};
+    }
+    else {
+        // use the first leg as definition for the coupon parameters, the whole cashflow is collapsed to one leg
+        // in the QuantLib instrument anyway
+        auto coupon = coupons_[0];
+
+        DLOG("Inspecting [" << tradeType() << "/" << id() << "] coupon: " << coupon.legType())
+        DayCounter dc = parseDayCounter(coupon.dayCounter());
+        Compounding compounding = Compounding::Compounded;
+        Frequency freq = Frequency::OtherFrequency;
+
+        DLOG("Count of schedule rules: " << coupon.schedule().rules().size());
+        for (const auto& schedRule : coupon.schedule().rules()) {
+            auto period = parsePeriod(schedRule.tenor());
+            auto schedFreq = period.frequency();
+            if (freq == Frequency::OtherFrequency) {
+                freq = schedFreq;
+            } else {
+                QL_REQUIRE(schedFreq == freq, "Bond schedule with varying frequencies not allowed");
+            }
+        }
+
+        // calculate yield-to-maturity
+        auto qlBond = boost::static_pointer_cast<QuantLib::Bond>(instrument()->qlInstrument());
+        auto ytm = qlBond->yield(dc, compounding, freq);
+        auto yield = InterestRate{ytm, dc, compounding, freq};
+        auto duration = BondFunctions::duration(*qlBond, yield,Duration::Simple, market->asofDate());
+        auto macDuration = BondFunctions::duration(*qlBond, yield,Duration::Macaulay, market->asofDate());
+        auto modDuration = BondFunctions::duration(*qlBond, yield, Duration::Modified, market->asofDate());
+        auto convexity = BondFunctions::convexity(*qlBond, yield, market->asofDate());
+
+        auto stats = boost::shared_ptr<StatisticsData>{new StatisticsData{} };
+        stats->duration(duration);
+        stats->macaulayDuration(macDuration);
+        stats->modifiedDuration(modDuration);
+        stats->yieldToMaturity(ytm);
+        stats->convexity(convexity);
+        return boost::shared_ptr<const StatisticsData> { stats };
+    }
+}
+
 } // namespace data
 } // namespace ore

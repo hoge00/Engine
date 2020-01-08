@@ -91,6 +91,7 @@
     <ClInclude Include="ored\marketdata\yieldcurve.hpp" />
     <ClInclude Include="ored\marketdata\inflationcapfloorvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\yieldvolcurve.hpp" />
+    <ClInclude Include="ored\measures\statisticsdata.hpp" />
     <ClInclude Include="ored\model\crossassetmodelbuilder.hpp" />
     <ClInclude Include="ored\model\crossassetmodeldata.hpp" />
     <ClInclude Include="ored\model\eqbsbuilder.hpp" />
@@ -223,6 +224,7 @@
     <ClCompile Include="ored\marketdata\yieldcurve.cpp" />
     <ClCompile Include="ored\marketdata\inflationcapfloorvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\yieldvolcurve.cpp" />
+    <ClCompile Include="ored\measures\statisticsdata.cpp" />
     <ClCompile Include="ored\model\crossassetmodelbuilder.cpp" />
     <ClCompile Include="ored\model\crossassetmodeldata.cpp" />
     <ClCompile Include="ored\model\eqbsbuilder.cpp" />

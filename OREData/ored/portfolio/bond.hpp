@@ -71,6 +71,8 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
 
+    boost::shared_ptr<const StatisticsData> statistics(boost::shared_ptr<Market> market) const override ;
+
     const string& issuerId() const { return issuerId_; }
     const string& creditCurveId() const { return creditCurveId_; }
     const string& securityId() const { return securityId_; }
@@ -82,6 +84,8 @@ public:
     const Real& faceAmount() const { return faceAmount_; }
     const string& maturityDate() const { return maturityDate_; }
     const string& currency() const { return currency_; }
+
+    bool isZeroBond() const;
 
 protected:
     virtual boost::shared_ptr<LegData> createLegData() const;
