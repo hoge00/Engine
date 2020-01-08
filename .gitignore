@@ -265,3 +265,8 @@ ipch/
 *log.txt
 *.csv
 *.dat
+
+# Clion build dir
+
+cmake-build-debug/
+

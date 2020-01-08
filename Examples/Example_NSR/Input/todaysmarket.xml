@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<TodaysMarket>
+  <Configuration id="default">
+    <DiscountingCurvesId>default</DiscountingCurvesId>
+    <YieldCurvesId>default</YieldCurvesId>
+  </Configuration>
+  <YieldCurves id="default">
+    <YieldCurve name="BENCHMARK_USD">Yield/USD/USD3M</YieldCurve>
+  </YieldCurves>
+  <DiscountingCurves id="default">
+    <DiscountingCurve currency="USD">Yield/USD/USD3M</DiscountingCurve>
+  </DiscountingCurves>
+  <IndexForwardingCurves id="default">
+  </IndexForwardingCurves>
+</TodaysMarket>
