@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Portfolio>
-  <Trade id="US40437WAC29_TRADE1">
+  <Trade id="FIXEDBOND_TRADE1">
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -12,7 +12,7 @@
     </Envelope>
     <BondData>
       <IssuerId>CPTY_C</IssuerId>
-      <SecurityId>US40437WAC29</SecurityId>
+      <SecurityId>FIXEDBOND</SecurityId>
       <ReferenceCurveId>BENCHMARK_USD</ReferenceCurveId>
       <SettlementDays>2</SettlementDays>
       <Calendar>TARGET</Calendar>
@@ -20,7 +20,7 @@
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>false</Payer>
-        <Currency>EUR</Currency>
+        <Currency>USD</Currency>
         <Notionals>
           <Notional>10000000.000000</Notional>
         </Notionals>
@@ -28,7 +28,7 @@
         <PaymentConvention>F</PaymentConvention>
         <FixedLegData>
           <Rates>
-            <Rate>0.05</Rate>
+            <Rate>0.02</Rate>
           </Rates>
         </FixedLegData>
         <ScheduleData>

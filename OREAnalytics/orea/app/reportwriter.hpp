@@ -40,6 +40,8 @@
 
 namespace ore {
 namespace analytics {
+class Statistics;
+
 //! Write ORE outputs to reports
 /*! \ingroup app
  */
@@ -79,6 +81,13 @@ public:
 
     virtual void writeSensitivityReport(ore::data::Report& report, const boost::shared_ptr<SensitivityStream>& ss,
                                         QuantLib::Real outputThreshold = 0.0);
+
+    virtual void writeStatistics(ore::data::Report& report,
+                                  const boost::shared_ptr<ore::analytics::Statistics>& statistics,
+                                  boost::shared_ptr<ore::data::Portfolio> portfolio,
+                                  boost::shared_ptr<ore::data::Market> market = boost::shared_ptr<ore::data::Market>(),
+                                  const std::string& configuration = ore::data::Market::defaultConfiguration);
+
 };
 } // namespace analytics
 } // namespace ore

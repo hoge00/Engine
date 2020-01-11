@@ -7,6 +7,7 @@ app/oreapp.cpp
 app/parameters.cpp
 app/reportwriter.cpp
 app/sensitivityrunner.cpp
+app/statistics.cpp
 cube/cubewriter.cpp
 cube/sensitivitycube.cpp
 engine/filteredsensitivitystream.cpp
@@ -49,6 +50,7 @@ app/oreapp.hpp
 app/parameters.hpp
 app/reportwriter.hpp
 app/sensitivityrunner.hpp
+app/statistics.hpp
 auto_link.hpp
 cube/cubewriter.hpp
 cube/inmemorycube.hpp

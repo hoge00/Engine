@@ -122,6 +122,8 @@ protected:
 
     //! write out initial (pre-cube) reports
     void writeInitialReports();
+    //! write out statistics reports
+    void writeStatisticsReport();
     //! write out XVA reports
     void writeXVAReports();
     //! write out DIM reports
@@ -193,6 +195,7 @@ protected:
     bool xva_;
     bool writeDIMReport_;
     bool sensitivity_;
+    bool statistics_;
     bool stress_;
     bool parametricVar_;
     bool writeBaseScenario_;

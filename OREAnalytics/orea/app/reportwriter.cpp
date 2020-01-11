@@ -21,7 +21,6 @@
 #include <orea/app/reportwriter.hpp>
 
 //FIXME: including all is slow and bad
-#include <orea/orea.hpp>
 #include <ored/ored.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ostream>
@@ -30,7 +29,7 @@
 #include <ql/cashflows/inflationcoupon.hpp>
 #include <ql/errors.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
-#include <stdio.h>
+#include <orea/app/statistics.hpp>
 
 using std::string;
 using std::vector;
@@ -106,7 +105,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                  boost::shared_ptr<ore::data::Market> market, const std::string& configuration) {
     Date asof = Settings::instance().evaluationDate();
     bool write_discount_factor = market ? true : false;
-    LOG("Writing cashflow report for " << asof);
+    LOG("Writing cashflow rep¡ort for " << asof);
     report.addColumn("TradeId", string())
         .addColumn("Type", string())
         .addColumn("CashflowNo", Size())
@@ -676,6 +675,42 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
 
     report.end();
     LOG("Sensitivity report finished");
+}
+
+void ReportWriter::writeStatistics(Report& report,
+                                   const boost::shared_ptr<Statistics>& statistics,
+                                   boost::shared_ptr<Portfolio> portfolio,
+                                   boost::shared_ptr<Market> market,
+                                   const string& configuration) {
+    LOG("portfolio statistics");
+    DayCounter dc = ActualActual();
+    report.addColumn("TradeId", string())
+          .addColumn("TradeType", string())
+          .addColumn("YTM", double(), 6)
+          .addColumn("Duration", double(), 6);
+
+    for (auto trade : portfolio->trades()) {
+        string npvCcy = trade->npvCurrency();
+        
+        try {
+            // TODO: Evaluation of 'statistics' input to filter for select statistics to calculate
+            auto stats = trade->statistics(market);
+            report.next()
+                    .add(trade->id())
+                    .add(trade->tradeType())
+                    .add(stats->yieldToMaturity())
+                    .add(stats->duration());
+        } catch (std::exception& e) {
+            ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during trade statistics collection", e.what()));
+            report.next()
+                    .add(trade->id())
+                    .add(trade->tradeType())
+                    .add(Null<Real>())
+                    .add(Null<Real>());
+        }
+    }
+    report.end();
+    LOG("statistics written");
 }
 
 } // namespace analytics
