@@ -58,6 +58,8 @@ public:
     //! Default destructor
     virtual ~Trade() {}
 
+    virtual boost::shared_ptr<const StatisticsData> statistics(boost::shared_ptr<Market> market) const;
+
     //! Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const boost::shared_ptr<EngineFactory>&) = 0;
 
@@ -107,6 +109,8 @@ public:
     const TradeActions& tradeActions() { return tradeActions_; }
 
     const boost::shared_ptr<InstrumentWrapper>& instrument() { return instrument_; }
+
+    boost::shared_ptr<const InstrumentWrapper> instrument() const { return boost::shared_ptr<const InstrumentWrapper>{instrument_}; }
 
     const std::vector<QuantLib::Leg>& legs() { return legs_; }
 

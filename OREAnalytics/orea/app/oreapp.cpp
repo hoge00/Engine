@@ -27,15 +27,15 @@
 #pragma warning(disable : 4503)
 #endif
 
+#include <set>
 #include <boost/filesystem.hpp>
 
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
-#include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/calendars/all.hpp>
-#include <ql/time/daycounters/all.hpp>
 
 #include <orea/app/oreapp.hpp>
+#include <orea/app/statistics.hpp>
 
 using namespace std;
 using namespace ore::data;
@@ -112,6 +112,19 @@ int OREApp::run() {
         out_ << setw(tab_) << left << "Write Reports... " << flush;
         writeInitialReports();
         out_ << "OK" << endl;
+
+        /**********************
+         * Calculate statistics
+        */
+        if (statistics_) {
+            out_ << setw(tab_) << left << "Statistics Report... " << flush;
+            writeStatisticsReport();
+            out_ << "OK" << endl;
+        } else {
+            LOG("skip statistics reporting");
+            out_ << setw(tab_) << left << "Statistics... ";
+            out_ << "SKIP" << endl;
+        }
 
         /**************************
          * Write base scenario file
@@ -247,6 +260,7 @@ void OREApp::readSetup() {
                           ? true
                           : false;
     sensitivity_ = (params_->hasGroup("sensitivity") && params_->get("sensitivity", "active") == "Y") ? true : false;
+    statistics_ = (params_->hasGroup("statistics") && params_->get("statistics", "active") == "Y") ? true : false;
     stress_ = (params_->hasGroup("stress") && params_->get("stress", "active") == "Y") ? true : false;
     parametricVar_ =
         (params_->hasGroup("parametricVar") && params_->get("parametricVar", "active") == "Y") ? true : false;
@@ -452,6 +466,31 @@ void OREApp::writeInitialReports() {
     }
 
     LOG("Initial reports written");
+    MEM_LOG;
+}
+
+
+void OREApp::writeStatisticsReport() {
+    MEM_LOG;
+    LOG("Writing statistics reports");
+
+    string fileName = outputPath_ + "/" + params_->get("statistics", "outputFileName");
+    set<StatisticType> statisticsTypes{};
+
+    if (params_->has("statistics", "duration")) {
+        string duration = params_->get("statistics", "duration");
+        statisticsTypes.insert(StatisticType::Duration);
+        out_ << "OK" << endl;
+    } else {
+        LOG("skip duration report");
+        out_ << "SKIP" << endl;
+    }
+
+    boost::shared_ptr<Statistics> statistics(new Statistics {statisticsTypes});
+    CSVFileReport statisticsReport(fileName);
+    getReportWriter()->writeStatistics(statisticsReport, statistics, portfolio_, market_);
+
+    LOG("Statistics written");
     MEM_LOG;
 }
 

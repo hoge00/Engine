@@ -19,11 +19,13 @@
 */
 
 #include <boost/lexical_cast.hpp>
+#include <ored/marketdata/market.hpp>
+#include <ored/measures/statisticsdata.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/fixingdates.hpp>
+#include <ored/portfolio/instrumentwrapper.hpp>
 #include <ored/portfolio/legdata.hpp>
-#include <ored/portfolio/swap.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -65,8 +67,6 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // Clear the separateLegs_ member here. Should be done in reset() but it is not virtual
     separateLegs_.clear();
-
-    const boost::shared_ptr<Market> market = engineFactory->market();
 
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
 
@@ -183,5 +183,10 @@ XMLNode* Bond::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(bondNode, c.toXML(doc));
     return node;
 }
+
+boost::shared_ptr<const StatisticsData> Bond::statistics(boost::shared_ptr<Market> market) const {
+    return instrument()->statistics(market, *this);
+}
+
 } // namespace data
 } // namespace ore

@@ -1,4 +1,4 @@
-SUBDIRS = marketdata portfolio utilities configuration model report
+SUBDIRS = marketdata measures portfolio utilities configuration model report
 
 AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt
 
@@ -11,6 +11,7 @@ libOREData_la_LDFLAGS = -release $(PACKAGE_VERSION)
 libOREData_la_LIBADD = \
 	configuration/libOREDataConfiguration.la \
 	marketdata/libOREDataMarketData.la \
+	measures/libOREDataMeasures.la \
 	model/libOREDataModel.la \
 	portfolio/libOREDataPortfolio.la \
 	utilities/libOREDataUtilities.la \

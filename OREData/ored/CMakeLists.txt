@@ -49,6 +49,7 @@ marketdata/todaysmarket.cpp
 marketdata/todaysmarketparameters.cpp
 marketdata/yieldcurve.cpp
 marketdata/yieldvolcurve.cpp
+measures/statisticsdata.cpp
 model/crossassetmodelbuilder.cpp
 model/crossassetmodeldata.cpp
 model/eqbsbuilder.cpp
@@ -85,6 +86,7 @@ portfolio/forwardrateagreement.cpp
 portfolio/fxforward.cpp
 portfolio/fxoption.cpp
 portfolio/fxswap.cpp
+portfolio/instrumentwrapper.cpp
 portfolio/legbuilders.cpp
 portfolio/legdata.cpp
 portfolio/nettingsetdefinition.cpp
@@ -171,6 +173,7 @@ marketdata/todaysmarket.hpp
 marketdata/todaysmarketparameters.hpp
 marketdata/yieldcurve.hpp
 marketdata/yieldvolcurve.hpp
+measures/statisticsdata.hpp
 model/crossassetmodelbuilder.hpp
 model/crossassetmodeldata.hpp
 model/eqbsbuilder.hpp

@@ -38,7 +38,7 @@ Docs/UserGuide/userguide.pdf
 ##########################
 # Examples
 ##########################
-Examples/Example_?/Output/
+Examples/Example_???/Output/
 Examples/Example_[0-9][0-9]/Output/
 
 ##################
@@ -267,6 +267,7 @@ ipch/
 *.dat
 
 # Clion build dir
-
 cmake-build-debug/
 
+# VS Code
+.vscode/

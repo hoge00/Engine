@@ -27,6 +27,7 @@ libOREDataPortfolio_la_SOURCES = \
 	trade.cpp \
 	tradeactions.cpp \
 	tradefactory.cpp \
+	instrumentwrapper.cpp \
 	optionwrapper.cpp \
 	enginedata.cpp \
 	nettingsetdefinition.cpp \
