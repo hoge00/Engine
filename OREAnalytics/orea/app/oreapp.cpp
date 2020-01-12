@@ -35,7 +35,6 @@
 #include <ql/time/calendars/all.hpp>
 
 #include <orea/app/oreapp.hpp>
-#include <orea/app/statistics.hpp>
 
 using namespace std;
 using namespace ore::data;
@@ -474,21 +473,13 @@ void OREApp::writeStatisticsReport() {
     MEM_LOG;
     LOG("Writing statistics reports");
 
-    string fileName = outputPath_ + "/" + params_->get("statistics", "outputFileName");
-    set<StatisticType> statisticsTypes{};
-
-    if (params_->has("statistics", "duration")) {
-        string duration = params_->get("statistics", "duration");
-        statisticsTypes.insert(StatisticType::Duration);
-        out_ << "OK" << endl;
-    } else {
-        LOG("skip duration report");
-        out_ << "SKIP" << endl;
+    string fileName = outputPath_ + "/statistics.csv";
+    if (params_->has("statistics", "outputFileName")) {
+        fileName = outputPath_ + "/" + params_->get("statistics", "outputFileName");
     }
 
-    boost::shared_ptr<Statistics> statistics(new Statistics {statisticsTypes});
     CSVFileReport statisticsReport(fileName);
-    getReportWriter()->writeStatistics(statisticsReport, statistics, portfolio_, market_);
+    getReportWriter()->writeStatistics(statisticsReport, portfolio_, market_);
 
     LOG("Statistics written");
     MEM_LOG;

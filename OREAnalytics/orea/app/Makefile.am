@@ -10,7 +10,6 @@ libOREAnalyticsApp_la_SOURCES = \
 	reportwriter.cpp \
     parameters.cpp \
     sensitivityrunner.cpp \
-    statistics.cpp \
     oreapp.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -19,7 +18,6 @@ this_include_HEADERS = \
     reportwriter.hpp \
     parameters.hpp \
     sensitivityrunner.hpp \
-    statistics.hpp \
     oreapp.hpp
 
 all.hpp: Makefile.am

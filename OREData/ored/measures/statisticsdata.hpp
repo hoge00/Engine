@@ -39,12 +39,24 @@ public:
     void duration(const Time& duration) { duration_ = duration; }
     const Time& duration() const { return duration_; }
 
+    void macaulayDuration(const Time& macDuration) { macDuration_ = macDuration; }
+    const Time& macaulayDuration() const { return macDuration_; }
+
+    void modifiedDuration(const Time& modDuration) { modDuration_ = modDuration; }
+    const Time& modifiedDuration() const { return modDuration_; }
+
     void yieldToMaturity(const Rate& yieldToMaturity) { yieldToMaturity_ = yieldToMaturity; }
     const Rate& yieldToMaturity() const { return yieldToMaturity_; }
 
+    void convexity(const Real& convexity) { convexity_ = convexity; }
+    const Real& convexity() const { return convexity_; }
+
 private:
     Time duration_;
+    Time macDuration_;
+    Time modDuration_;
     Rate yieldToMaturity_;
+    Real convexity_;
 };
 
 } // namespace data

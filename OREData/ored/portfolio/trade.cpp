@@ -78,7 +78,7 @@ void Trade::addPayment(std::vector<boost::shared_ptr<Instrument>>& addInstrument
     legPayers_.push_back(false);
 }
 
-boost::shared_ptr<const StatisticsData> Trade::statistics(boost::shared_ptr<Market> market) const {
+boost::shared_ptr<const StatisticsData> Trade::statistics(boost::shared_ptr<Market> /*market*/) const {
     return boost::shared_ptr<const StatisticsData>(new StatisticsData{});
 }
 

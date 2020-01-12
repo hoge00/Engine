@@ -21,7 +21,12 @@
 namespace ore {
 namespace data {
 
-StatisticsData::StatisticsData() : duration_{0.}, yieldToMaturity_{0.} {
+StatisticsData::StatisticsData() :
+    duration_{0.},
+    macDuration_{0.},
+    modDuration_{0.},
+    yieldToMaturity_{0.},
+    convexity_{0.} {
 }
 
 }

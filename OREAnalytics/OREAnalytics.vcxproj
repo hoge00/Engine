@@ -42,7 +42,6 @@
     <ClInclude Include="orea\app\parameters.hpp" />
     <ClInclude Include="orea\app\reportwriter.hpp" />
     <ClInclude Include="orea\app\sensitivityrunner.hpp" />
-    <ClInclude Include="orea\app\statistics.hpp" />
     <ClInclude Include="orea\auto_link.hpp" />
     <ClInclude Include="orea\cube\cubewriter.hpp" />
     <ClInclude Include="orea\cube\inmemorycube.hpp" />
@@ -96,7 +95,6 @@
     <ClCompile Include="orea\app\parameters.cpp" />
     <ClCompile Include="orea\app\reportwriter.cpp" />
     <ClCompile Include="orea\app\sensitivityrunner.cpp" />
-    <ClCompile Include="orea\app\statistics.cpp" />
     <ClCompile Include="orea\cube\cubewriter.cpp" />
     <ClCompile Include="orea\cube\sensitivitycube.cpp" />
     <ClCompile Include="orea\engine\filteredsensitivitystream.cpp" />

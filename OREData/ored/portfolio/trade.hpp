@@ -34,6 +34,9 @@
 
 namespace ore {
 namespace data {
+
+class StatisticsData;
+
 using std::string;
 using ore::data::XMLSerializable;
 using ore::data::XMLNode;

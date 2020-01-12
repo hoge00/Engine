@@ -86,7 +86,6 @@ portfolio/forwardrateagreement.cpp
 portfolio/fxforward.cpp
 portfolio/fxoption.cpp
 portfolio/fxswap.cpp
-portfolio/instrumentwrapper.cpp
 portfolio/legbuilders.cpp
 portfolio/legdata.cpp
 portfolio/nettingsetdefinition.cpp

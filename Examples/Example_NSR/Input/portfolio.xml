@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Portfolio>
-  <Trade id="FIXEDBOND_TRADE1">
+  <Trade id="FIXEDBOND1_TRADE1">
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -12,7 +12,7 @@
     </Envelope>
     <BondData>
       <IssuerId>CPTY_C</IssuerId>
-      <SecurityId>FIXEDBOND</SecurityId>
+      <SecurityId>FIXEDBOND1</SecurityId>
       <ReferenceCurveId>BENCHMARK_USD</ReferenceCurveId>
       <SettlementDays>2</SettlementDays>
       <Calendar>TARGET</Calendar>
@@ -47,5 +47,119 @@
         </ScheduleData>
       </LegData>
     </BondData>
+  </Trade>
+  <Trade id="FIXEDBOND2_TRADE1">
+    <TradeType>Bond</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF1</PortfolioId>
+      </PortfolioIds>
+      <AdditionalFields/>
+    </Envelope>
+    <BondData>
+      <IssuerId>CPTY_C</IssuerId>
+      <SecurityId>FIXEDBOND2</SecurityId>
+      <ReferenceCurveId>BENCHMARK_USD</ReferenceCurveId>
+      <SettlementDays>2</SettlementDays>
+      <Calendar>TARGET</Calendar>
+      <IssueDate>20190627</IssueDate>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>10000000.000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>F</PaymentConvention>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.02</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20190627</StartDate>
+            <EndDate>20300725</EndDate>
+            <Tenor>1Y</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </BondData>
+  </Trade>
+  <Trade id="FLTBOND_TRADE1">
+    <TradeType>Bond</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_C</CounterParty>
+      <NettingSetId/>
+      <AdditionalFields/>
+    </Envelope>
+    <BondData>
+      <IssuerId>CPTY_C</IssuerId>
+      <SecurityId>FLTBOND</SecurityId>
+      <ReferenceCurveId>BENCHMARK_USD</ReferenceCurveId>
+      <SettlementDays>2</SettlementDays>
+      <Calendar>TARGET</Calendar>
+      <IssueDate>20190627</IssueDate>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>false</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>10000000.000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>F</PaymentConvention>
+        <FloatingLegData>
+          <Spreads>
+            <Spread>0.01</Spread>
+            <!-- 100bps -->
+          </Spreads>
+          <Index>USD-LIBOR-3M</Index>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20190627</StartDate>
+            <EndDate>20300725</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </BondData>
+  </Trade>
+  <Trade id="FRA">
+    <TradeType>ForwardRateAgreement</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <ForwardRateAgreementData>
+      <StartDate>2019-10-28</StartDate>
+      <EndDate>2020-04-28</EndDate>
+      <Currency>USD</Currency>
+      <Index>USD-LIBOR-3M</Index>
+      <LongShort>Long</LongShort>
+      <Strike>0.005</Strike>
+      <Notional>100000000</Notional>
+    </ForwardRateAgreementData>
   </Trade>
 </Portfolio>

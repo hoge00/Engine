@@ -29,9 +29,6 @@
 
 namespace ore {
 namespace data {
-class Market;
-class Bond;
-class StatisticsData;
 using QuantLib::Real;
 
 //! Instrument Wrapper
@@ -68,8 +65,6 @@ public:
 
     //! Return the NPV of this instrument
     virtual QuantLib::Real NPV() const = 0;
-
-    virtual boost::shared_ptr<const StatisticsData> statistics(boost::shared_ptr<Market> market, const Bond& bond) const;
 
     QuantLib::Real additionalInstrumentsNPV() const {
         Real npv = 0.0;
@@ -123,8 +118,6 @@ public:
     void reset() override {}
 
     QuantLib::Real NPV() const override { return instrument_->NPV() * multiplier_ + additionalInstrumentsNPV(); }
-
-    boost::shared_ptr<const StatisticsData> statistics(boost::shared_ptr<Market> market, const Bond& bond) const override;
 };
 } // namespace data
 } // namespace ore

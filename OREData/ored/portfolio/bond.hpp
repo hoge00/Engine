@@ -85,6 +85,8 @@ public:
     const string& maturityDate() const { return maturityDate_; }
     const string& currency() const { return currency_; }
 
+    bool isZeroBond() const;
+
 protected:
     virtual boost::shared_ptr<LegData> createLegData() const;
 

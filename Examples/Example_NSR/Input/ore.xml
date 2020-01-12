@@ -34,8 +34,7 @@
     </Analytic>
     <Analytic type="statistics">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="duration">all</Parameter>
-      <Parameter name="outputFileName">statistics.csv</Parameter>
+      <Parameter name="outputFileName">stats.csv</Parameter>
     </Analytic>
     <Analytic type="curves">
       <Parameter name="active">Y</Parameter>
