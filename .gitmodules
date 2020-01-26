@@ -1,5 +1,4 @@
 [submodule "QuantLib"]
 	path = QuantLib
-	url = https://github.com/lballabio/QuantLib.git
-	branch = v1.8.x
-	ignore = dirty
+	url = https://github.com/hoge00/QuantLib
+	branch = nsr_testbranch

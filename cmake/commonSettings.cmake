@@ -49,6 +49,13 @@ else()
 	add_compiler_flag("-Wsign-compare" supportsSignCompare)
 	add_compiler_flag("-Wsometimes-uninitialized" supportsSometimesUninitialized)
 	add_compiler_flag("-Wmaybe-uninitialized" supportsMaybeUninitialized)
+
+    find_package(OpenMP)
+    if(OpenMP_CXX_FOUND)
+        message(STATUS "Compiling with OpenMP support")
+        set(GCC_OPEN_MP_FLAGS "-fopenmp")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_OPEN_MP_FLAGS}")
+    endif()
 endif()
 
 # set library locations
