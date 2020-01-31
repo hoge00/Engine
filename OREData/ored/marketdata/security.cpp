@@ -28,14 +28,14 @@
 namespace ore {
 namespace data {
 
-Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader, const CurveConfigurations& curveConfigs) {
+Security::Security(const Date& asof, const SecuritySpec& spec, const Loader& loader, const CurveConfigurations& curveConfigs) {
 
     try {
         const boost::shared_ptr<SecurityConfig>& config = curveConfigs.securityConfig(spec.securityID());
 
         // get spread quote
         string spreadQuote = config->spreadQuote();
-        if (spreadQuote != "") {
+        if (!spreadQuote.empty()) {
             QL_REQUIRE(loader.has(spreadQuote, asof),
                        "required spread quote " << spreadQuote << " not found for " << spec);
             boost::shared_ptr<SecuritySpreadQuote> q =
@@ -44,9 +44,20 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader, co
             spread_ = q->quote();
         }
 
+        // get price quote
+        string priceQuote = config->priceQuote();
+        if (!priceQuote.empty()) {
+            QL_REQUIRE(loader.has(priceQuote, asof),
+                       "required price quote " << priceQuote << " not found for " << spec);
+            boost::shared_ptr<SecurityPriceQuote> q =
+                    boost::dynamic_pointer_cast<SecurityPriceQuote>(loader.get(priceQuote, asof));
+            QL_REQUIRE(q, "Failed to cast " << priceQuote << " to SecurityPriceQuote");
+            price_ = q->quote();
+        }
+
         // get recovery quote
         string recoveryQuote = config->recoveryRatesQuote();
-        if (recoveryQuote != "") {
+        if (!recoveryQuote.empty()) {
             QL_REQUIRE(loader.has(recoveryQuote, asof),
                        "required recovery quote " << recoveryQuote << " not found for " << spec);
             boost::shared_ptr<RecoveryRateQuote> q =
@@ -57,12 +68,14 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader, co
 
         // get cpr quote
         string cprQuote = config->cprQuote();
-        if (cprQuote != "" && (loader.has(cprQuote, asof))) {
+        if (!cprQuote.empty() && (loader.has(cprQuote, asof))) {
             boost::shared_ptr<CPRQuote> q = boost::dynamic_pointer_cast<CPRQuote>(loader.get(cprQuote, asof));
             QL_REQUIRE(q, "Failed to cast " << cprQuote << " to CPRQuote");
             cpr_ = q->quote();
         }
 
+        if (price_.empty())
+            WLOG("No security-specific price found for " << spec);
         if (recoveryRate_.empty())
             WLOG("No security-specific recovery rate found for " << spec);
         if (cpr_.empty())
@@ -77,7 +90,6 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader, co
         QL_FAIL("Security building failed: unknown error");
     }
 
-    return;
 }
 } // namespace data
 } // namespace ore

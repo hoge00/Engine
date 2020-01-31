@@ -20,15 +20,14 @@
 #include <boost/test/unit_test.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/bond.hpp>
-#include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <oret/toplevelfixture.hpp>
+#include <ql/instruments/bond.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <ORE>
   <Setup>
-    <Parameter name="asofDate">2019-08-05</Parameter>
+    <Parameter name="asofDate">2015-07-31</Parameter>
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
@@ -39,7 +39,7 @@
     <Analytic type="curves">
       <Parameter name="active">Y</Parameter>
       <Parameter name="configuration">default</Parameter>
-      <Parameter name="grid">1D,2D,1W,2W,1M,2M,3M,4M,5M,6M,12M,2Y,5Y,10Y</Parameter>
+      <Parameter name="grid">2D,3M,12M,3Y,5Y,10Y</Parameter>
       <Parameter name="outputFileName">curves.csv</Parameter>
     </Analytic>
   </Analytics>

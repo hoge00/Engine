@@ -15,28 +15,29 @@
       <SecurityId>FIXEDBOND1</SecurityId>
       <ReferenceCurveId>BENCHMARK_USD</ReferenceCurveId>
       <SettlementDays>2</SettlementDays>
-      <Calendar>TARGET</Calendar>
-      <IssueDate>20190627</IssueDate>
+      <Calendar>WeekendsOnly</Calendar>
+      <IssueDate>20150803</IssueDate>
+      <Maturity>20200803</Maturity>
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>false</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>10000000.000000</Notional>
+          <Notional>1000000.0</Notional>
         </Notionals>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>F</PaymentConvention>
         <FixedLegData>
           <Rates>
-            <Rate>0.02</Rate>
+            <Rate>0.01</Rate>
           </Rates>
         </FixedLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20190627</StartDate>
-            <EndDate>20300725</EndDate>
-            <Tenor>3M</Tenor>
-            <Calendar>TARGET</Calendar>
+            <StartDate>20150803</StartDate>
+            <EndDate>20200803</EndDate>
+            <Tenor>12M</Tenor>
+            <Calendar>WeekendsOnly</Calendar>
             <Convention>F</Convention>
             <TermConvention>F</TermConvention>
             <Rule>Forward</Rule>
@@ -48,6 +49,7 @@
       </LegData>
     </BondData>
   </Trade>
+  <!--
   <Trade id="FIXEDBOND2_TRADE1">
     <TradeType>Bond</TradeType>
     <Envelope>
@@ -122,7 +124,6 @@
         <FloatingLegData>
           <Spreads>
             <Spread>0.01</Spread>
-            <!-- 100bps -->
           </Spreads>
           <Index>USD-LIBOR-3M</Index>
           <IsInArrears>false</IsInArrears>
@@ -162,4 +163,5 @@
       <Notional>100000000</Notional>
     </ForwardRateAgreementData>
   </Trade>
+-->
 </Portfolio>
