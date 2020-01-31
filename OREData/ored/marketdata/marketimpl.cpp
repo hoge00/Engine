@@ -229,6 +229,10 @@ Handle<Quote> MarketImpl::securitySpread(const string& key, const string& config
     return lookup<Handle<Quote>>(securitySpreads_, key, configuration, "security spread");
 }
 
+Handle<Quote> MarketImpl::securityPrice(const string& key, const string& configuration) const {
+    return lookup<Handle<Quote>>(securityPrices_, key, configuration, "security price");
+}
+
 Handle<QuantExt::InflationIndexObserver> MarketImpl::baseCpis(const string& key, const string& configuration) const {
     return lookup<Handle<QuantExt::InflationIndexObserver>>(baseCpis_, key, configuration, "base CPI");
 }

@@ -19,10 +19,12 @@
 
 #include <boost/date_time.hpp>
 #include <boost/make_shared.hpp>
-#include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/coupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
+#include <ql/termstructures/defaulttermstructure.hpp>
+#include <utility>
+#include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 
@@ -32,11 +34,12 @@ using namespace QuantLib;
 namespace QuantExt {
 
 DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
-                                                       const Handle<DefaultProbabilityTermStructure>& defaultCurve,
-                                                       const Handle<Quote>& recoveryRate,
-                                                       const Handle<Quote>& securitySpread, Period timestepPeriod,
+                                                       Handle<DefaultProbabilityTermStructure> defaultCurve,
+                                                       Handle<Quote> recoveryRate,
+                                                       const Handle<Quote>& securitySpread,
+                                                       Period timestepPeriod,
                                                        boost::optional<bool> includeSettlementDateFlows)
-    : defaultCurve_(defaultCurve), recoveryRate_(recoveryRate), securitySpread_(securitySpread),
+    : defaultCurve_(std::move(defaultCurve)), recoveryRate_(std::move(recoveryRate)), securitySpread_(securitySpread),
       timestepPeriod_(timestepPeriod), includeSettlementDateFlows_(includeSettlementDateFlows) {
     discountCurve_ =
         securitySpread_.empty()
@@ -45,19 +48,6 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStr
     registerWith(discountCurve_);
     registerWith(defaultCurve_);
     registerWith(recoveryRate_);
-    registerWith(securitySpread_);
-}
-
-DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
-                                                       const Handle<Quote>& securitySpread, Period timestepPeriod,
-                                                       boost::optional<bool> includeSettlementDateFlows)
-    : securitySpread_(securitySpread), timestepPeriod_(timestepPeriod),
-      includeSettlementDateFlows_(includeSettlementDateFlows) {
-    discountCurve_ =
-        securitySpread_.empty()
-            ? discountCurve
-            : Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
-    registerWith(discountCurve_);
     registerWith(securitySpread_);
 }
 
@@ -99,8 +89,7 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate, const Leg& cashflows
 
     Size numCoupons = 0;
     bool hasLiveCashFlow = false;
-    for (Size i = 0; i < cashflows.size(); i++) {
-        boost::shared_ptr<CashFlow> cf = cashflows[i];
+    for (const auto& cf : cashflows) {
         if (cf->hasOccurred(npvDate, includeSettlementDateFlows_))
             continue;
         hasLiveCashFlow = true;
@@ -157,4 +146,5 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate, const Leg& cashflows
 
     return npvValue;
 }
+
 } // namespace QuantExt

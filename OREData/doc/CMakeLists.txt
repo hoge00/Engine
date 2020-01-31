@@ -15,6 +15,6 @@ if (DOXYGEN_FOUND AND BUILD_DOC)
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Generating API documentation with Doxygen"
         VERBATIM )
-else (DOXYGEN_FOUND)
-  message("Doxygen need to be installed to generate the doxygen documentation")
-endif (DOXYGEN_FOUND)
+else ()
+    message("Documentation build turned off or no doxygen installation found")
+endif ()

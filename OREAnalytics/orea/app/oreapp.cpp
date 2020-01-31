@@ -457,7 +457,7 @@ void OREApp::writeInitialReports() {
     if (params_->hasGroup("cashflow") && params_->get("cashflow", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("cashflow", "outputFileName");
         CSVFileReport cashflowReport(fileName);
-        getReportWriter()->writeCashflow(cashflowReport, portfolio_);
+        getReportWriter()->writeCashflow(cashflowReport, portfolio_, market_, Market::defaultConfiguration);
         out_ << "OK" << endl;
     } else {
         LOG("skip cashflow generation");
@@ -479,7 +479,7 @@ void OREApp::writeStatisticsReport() {
     }
 
     CSVFileReport statisticsReport(fileName);
-    getReportWriter()->writeStatistics(statisticsReport, portfolio_, market_);
+    getReportWriter()->writeStatistics(statisticsReport, portfolio_, market_, Market::defaultConfiguration);
 
     LOG("Statistics written");
     MEM_LOG;

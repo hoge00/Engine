@@ -66,7 +66,7 @@ enum class YieldCurveType {
 class Market {
 public:
     //! Destructor
-    virtual ~Market() {}
+    virtual ~Market() = default;
 
     //! Get the asof Date
     virtual Date asofDate() const = 0;
@@ -190,6 +190,11 @@ public:
     //@{
     virtual Handle<Quote> securitySpread(const string& securityID,
                                          const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
+    //! \name Bond Prices
+    //@{
+    virtual Handle<Quote> securityPrice(const string& securityID, const string& configuration) const = 0;
     //@}
 
     //! \name Commodity price curves

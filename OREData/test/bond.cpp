@@ -20,15 +20,14 @@
 #include <boost/test/unit_test.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/bond.hpp>
-#include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <oret/toplevelfixture.hpp>
+#include <ql/instruments/bond.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
@@ -115,7 +114,7 @@ struct CommonVars {
     string calStr;
     string conv;
     string rule;
-    Size days;
+    Size days{};
     string fixDC;
     Real fixedRate;
     string settledays;
@@ -215,6 +214,20 @@ struct CommonVars {
         return bond;
     }
 
+    boost::shared_ptr<ore::data::Bond> makeBondWithInstrumentStyle(const string& instrumentStyle) {
+        ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor, calStr,
+                conv, conv, rule));
+
+        LegData fixedLegData(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy,
+                             fixedSchedule, fixDC, notionals);
+
+        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(Envelope{"CP1"},
+                 issuerId, creditCurveId, securityId, referenceCurveId,
+                settledays, calStr, issue, fixedLegData, instrumentStyle));
+
+        return bond;
+    }
+
     CommonVars()
         : ccy("EUR"), securityId("Security1"), creditCurveId("CreditCurve_A"), issuerId("CPTY_A"),
           referenceCurveId("BANK_EUR_LEND"), isPayer(false), start("20160203"), end("20210203"), issue("20160203"),
@@ -277,6 +290,25 @@ BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(BondTests)
 
+BOOST_AUTO_TEST_CASE(testInstrumentStyle) {
+    BOOST_TEST_MESSAGE("Testing Bond instrument styles...");
+
+    // build market
+    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+    Settings::instance().evaluationDate() = market->asofDate();
+
+    CommonVars vars;
+    boost::shared_ptr<ore::data::Bond> bond = vars.makeBondWithInstrumentStyle("");
+
+    BOOST_CHECK_EQUAL(bond->instrumentStyle(), "");
+    BOOST_CHECK_EQUAL(bond->tradeType(), "Bond");
+
+    bond = vars.makeBondWithInstrumentStyle("MarkedToMarketImpliedSpread");
+
+    BOOST_CHECK_EQUAL(bond->instrumentStyle(), "MarkedToMarketImpliedSpread");
+    BOOST_CHECK_EQUAL(bond->tradeType(), "Bond");
+}
+
 BOOST_AUTO_TEST_CASE(testZeroBond) {
     BOOST_TEST_MESSAGE("Testing Zero Bond...");
 
@@ -286,6 +318,8 @@ BOOST_AUTO_TEST_CASE(testZeroBond) {
 
     CommonVars vars;
     boost::shared_ptr<ore::data::Bond> bond = vars.makeZeroBond();
+
+    BOOST_CHECK(bond->isZeroBond());
 
     // Build and price
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
@@ -409,12 +443,14 @@ BOOST_AUTO_TEST_CASE(testAmortizingBondWithChangingAmortisation) {
     // fixed rate bond test cases
     boost::shared_ptr<ore::data::Bond> bond1 = vars.makeAmortizingFixedBondWithChangingAmortisation(
         "FixedAmount", 2500000, true, "05-02-2018", "FixedAmount", 1250000, true);
+    BOOST_CHECK(!bond1->isZeroBond());
     bond1->build(engineFactory);
     printBondSchedule(bond1);
     checkNominalSchedule(bond1, {1.0E7, 7.5E6, 6.25E6, 5.0E6, 3.75E6});
 
     boost::shared_ptr<ore::data::Bond> bond2 = vars.makeAmortizingFixedBondWithChangingAmortisation(
         "FixedAmount", 2500000, true, "05-02-2018", "RelativeToInitialNotional", 0.1, true);
+    BOOST_CHECK(!bond2->isZeroBond());
     bond2->build(engineFactory);
     printBondSchedule(bond2);
     checkNominalSchedule(bond2, {1.0E7, 7.5E6, 6.5E6, 5.5E6, 4.5E6});
@@ -476,6 +512,7 @@ BOOST_AUTO_TEST_CASE(testMultiPhaseBond) {
     boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(env, vars.issuerId, vars.creditCurveId, vars.securityId,
                                                                 vars.referenceCurveId, vars.settledays, vars.calStr,
                                                                 vars.issue, {legdata1, legdata2}));
+    BOOST_CHECK(!bond->isZeroBond());
     bond->build(engineFactory);
     printBondSchedule(bond);
     auto qlInstr = boost::dynamic_pointer_cast<QuantLib::Bond>(bond->instrument()->qlInstrument());
@@ -501,7 +538,6 @@ BOOST_AUTO_TEST_CASE(testBondZeroSpreadDefault) {
 
     CommonVars vars;
     boost::shared_ptr<ore::data::Bond> bond = vars.makeBond();
-
     // Build and price
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
     engineData->model("Bond") = "DiscountedCashflows";
