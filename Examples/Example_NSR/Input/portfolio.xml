@@ -25,7 +25,7 @@
         <Notionals>
           <Notional>1000000.0</Notional>
         </Notionals>
-        <DayCounter>ACT/ACT</DayCounter>
+        <DayCounter>30/360</DayCounter>
         <PaymentConvention>F</PaymentConvention>
         <FixedLegData>
           <Rates>
@@ -49,6 +49,7 @@
       </LegData>
     </BondData>
   </Trade>
+
   <!--
   <Trade id="FIXEDBOND2_TRADE1">
     <TradeType>Bond</TradeType>
