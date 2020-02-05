@@ -25,9 +25,13 @@
 #define quantext_discounting_riskybond_engine_hpp
 
 #include <ql/instruments/bond.hpp>
-#include <ql/termstructures/defaulttermstructure.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/period.hpp>
+#include <ql/shared_ptr.hpp>
+
+namespace QuantLib {
+    class YieldTermStructure;
+    class DefaultProbabilityTermStructure;
+}
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -51,26 +55,35 @@ class DiscountingRiskyBondEngine : public QuantLib::Bond::engine {
 public:
     DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
                                const Handle<DefaultProbabilityTermStructure>& defaultCurve,
-                               const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,
-                               Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none);
-    //! alternative constructor (does not require default curve or recovery rate)
-    DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve, const Handle<Quote>& securitySpread,
-                               Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none);
+                               const Handle<Quote>& recoveryRate,
+                               const Handle<Quote>& securitySpread,
+                               Period timestepPeriod,
+                               boost::optional<bool> includeSettlementDateFlows = boost::none);
 
-    void calculate() const;
+    static ext::shared_ptr<QuantLib::Bond::engine> pricedBased(const Handle<YieldTermStructure>& discountCurve,
+                                                               const Handle<Quote>& price,
+                                                               Period timestepPeriod,
+                                                               boost::optional<bool> includeSettlementDateFlows = boost::none);
+
+    void calculate() const override;
     // calculate the npv as of the npvDate, conditional on survival until the npvDate of the given cashflows
     Real calculateNpv(Date npvDate, const Leg& cashflows) const;
     // inspectors
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; };
     Handle<DefaultProbabilityTermStructure> defaultCurve() const { return defaultCurve_; };
     Handle<Quote> recoveryRate() const { return recoveryRate_; };
-    Handle<Quote> securitySpread() const { return securitySpread_; };
 
 private:
+    DiscountingRiskyBondEngine(Handle<YieldTermStructure>  discountCurve,
+                               Handle<Quote>  securityPrice,
+                               Period timestepPeriod,
+                               boost::optional<bool> includeSettlementDateFlows = boost::none);
+
     Handle<YieldTermStructure> discountCurve_;
     Handle<DefaultProbabilityTermStructure> defaultCurve_;
     Handle<Quote> recoveryRate_;
     Handle<Quote> securitySpread_;
+    Handle<Quote> securityPrice_;
     Period timestepPeriod_;
     boost::optional<bool> includeSettlementDateFlows_;
 };

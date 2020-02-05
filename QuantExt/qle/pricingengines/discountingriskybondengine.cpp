@@ -19,10 +19,11 @@
 
 #include <boost/date_time.hpp>
 #include <boost/make_shared.hpp>
-#include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/coupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
+#include <ql/termstructures/defaulttermstructure.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 
@@ -34,10 +35,13 @@ namespace QuantExt {
 DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
                                                        const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                                        const Handle<Quote>& recoveryRate,
-                                                       const Handle<Quote>& securitySpread, Period timestepPeriod,
+                                                       const Handle<Quote>& securitySpread,
+                                                       Period timestepPeriod,
                                                        boost::optional<bool> includeSettlementDateFlows)
     : defaultCurve_(defaultCurve), recoveryRate_(recoveryRate), securitySpread_(securitySpread),
       timestepPeriod_(timestepPeriod), includeSettlementDateFlows_(includeSettlementDateFlows) {
+    // TODO: make a private function that retrieves a ZeroSpreadedTermStructure if spread or price are given and
+    // also include compounding info, see: https://quant.stackexchange.com/questions/42710/quantlib-bondfunctions-zspread-does-not-match-clean-price-exactly
     discountCurve_ =
         securitySpread_.empty()
             ? discountCurve
@@ -48,17 +52,18 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStr
     registerWith(securitySpread_);
 }
 
-DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
-                                                       const Handle<Quote>& securitySpread, Period timestepPeriod,
+DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(Handle<YieldTermStructure> discountCurve,
+                                                       Handle<Quote> securityPrice,
+                                                       Period timestepPeriod,
                                                        boost::optional<bool> includeSettlementDateFlows)
-    : securitySpread_(securitySpread), timestepPeriod_(timestepPeriod),
-      includeSettlementDateFlows_(includeSettlementDateFlows) {
-    discountCurve_ =
-        securitySpread_.empty()
-            ? discountCurve
-            : Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
+// TODO: make a private function that retrieves a ZeroSpreadedTermStructure if spread or price are given and
+// also include compounding info, see: https://quant.stackexchange.com/questions/42710/quantlib-bondfunctions-zspread-does-not-match-clean-price-exactly
+: discountCurve_(std::move(discountCurve)),
+  securityPrice_(std::move(securityPrice)),
+  timestepPeriod_(timestepPeriod),
+  includeSettlementDateFlows_(includeSettlementDateFlows) {
     registerWith(discountCurve_);
-    registerWith(securitySpread_);
+    registerWith(securityPrice_);
 }
 
 void DiscountingRiskyBondEngine::calculate() const {
@@ -83,6 +88,9 @@ void DiscountingRiskyBondEngine::calculate() const {
 Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate, const Leg& cashflows) const {
     Real npvValue = 0;
 
+    QL_REQUIRE(securityPrice_.empty() || securitySpread_.empty(),
+            "ambiguous spread: explicit securitySpread and implicit through securityPrice");
+
     // handle case where we wish to price simply with benchmark curve and scalar security spread
     // i.e. credit curve term structure (and recovery) have not been specified
     // we set the default probability and recovery rate to zero in this instance (issuer credit worthiness already
@@ -99,8 +107,7 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate, const Leg& cashflows
 
     Size numCoupons = 0;
     bool hasLiveCashFlow = false;
-    for (Size i = 0; i < cashflows.size(); i++) {
-        boost::shared_ptr<CashFlow> cf = cashflows[i];
+    for (const auto& cf : cashflows) {
         if (cf->hasOccurred(npvDate, includeSettlementDateFlows_))
             continue;
         hasLiveCashFlow = true;
@@ -157,4 +164,16 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate, const Leg& cashflows
 
     return npvValue;
 }
+
+ext::shared_ptr<Bond::engine> DiscountingRiskyBondEngine::pricedBased(const Handle<YieldTermStructure> &discountCurve,
+                                                                      const Handle<Quote> &price,
+                                                                      Period timestepPeriod,
+                                                                      boost::optional<bool> includeSettlementDateFlows) {
+
+    return ext::shared_ptr<Bond::engine>(new DiscountingRiskyBondEngine { discountCurve,
+                                                                          price,
+                                                                          timestepPeriod,
+                                                                          includeSettlementDateFlows });
+}
+
 } // namespace QuantExt

@@ -32,28 +32,21 @@ namespace data {
 /*! Pricing engines are cached by security id
 \ingroup builders
 */
+template <typename... Args>
+using BondEngineBuilder = CachingPricingEngineBuilder<string, const Currency&, const string&, const string&, Args...>;
 
-class BondEngineBuilder
-    : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&, const string&> {
+class DiscountingBondEngineBuilder : public BondEngineBuilder<const string&> {
+public:
+    DiscountingBondEngineBuilder();
+
 protected:
-    BondEngineBuilder(const std::string& model, const std::string& engine);
+    DiscountingBondEngineBuilder(const std::string& model, const std::string& engine);
 
     string keyImpl(const Currency& ccy,
                    const string& creditCurveId,
                    const string& securityId,
                    const string& referenceCurveId) override;
-};
 
-//! Discounting Engine Builder class for Bonds
-/*! This class creates a DiscountingRiskyBondEngine
-\ingroup builders
-*/
-
-class BondDiscountingEngineBuilder : public BondEngineBuilder {
-public:
-    BondDiscountingEngineBuilder();
-
-protected:
     boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy,
                                                 const string& creditCurveId,
                                                 const string& securityId,

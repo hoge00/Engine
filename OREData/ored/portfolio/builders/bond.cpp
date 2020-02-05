@@ -38,23 +38,21 @@ using QuantLib::Disposable;
 namespace ore {
 namespace data {
 
-BondEngineBuilder::BondEngineBuilder(const std::string& model, const std::string& engine)
+DiscountingBondEngineBuilder::DiscountingBondEngineBuilder(const std::string& model, const std::string& engine)
     : CachingEngineBuilder(model, engine, {"Bond"}) {}
 
-string BondEngineBuilder::keyImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
-                                  const string& referenceCurveId) {
+string DiscountingBondEngineBuilder::keyImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
+                                             const string& referenceCurveId) {
     return ccy.code() + "_" + creditCurveId + "_" + securityId + "_" + referenceCurveId;
 }
 
-BondDiscountingEngineBuilder::BondDiscountingEngineBuilder()
-    : BondEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngine") {}
+DiscountingBondEngineBuilder::DiscountingBondEngineBuilder()
+    : DiscountingBondEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngine") {}
 
-boost::shared_ptr<PricingEngine> BondDiscountingEngineBuilder::engineImpl(const Currency& ccy,
+boost::shared_ptr<PricingEngine> DiscountingBondEngineBuilder::engineImpl(const Currency& ccy,
                                                                           const string& creditCurveId,
                                                                           const string& securityId,
                                                                           const string& referenceCurveId) {
-    string tsperiodStr = engineParameter("TimestepPeriod");
-    Period tsperiod = parsePeriod(tsperiodStr);
     Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
     Handle<DefaultProbabilityTermStructure> dpts;
     // credit curve may not always be used. If credit curve ID is empty proceed without it
@@ -79,7 +77,21 @@ boost::shared_ptr<PricingEngine> BondDiscountingEngineBuilder::engineImpl(const 
     } catch (...) {
     }
 
-    return boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, spread, tsperiod);
+    Handle<Quote> price;
+    try {
+        // price is optional, pass empty handle to engine if not given
+        price = market_->securityPrice(securityId, configuration(MarketContext::pricing));
+        DLOG("Using price of [" << price->value() << "] for " << securityId)
+    } catch (...) {
+    }
+
+    string tsperiodStr = engineParameter("TimestepPeriod");
+    Period tsperiod = parsePeriod(tsperiodStr);
+
+    if (price.empty())
+        return boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, spread, tsperiod);
+    else
+        return QuantExt::DiscountingRiskyBondEngine::pricedBased(yts, price, tsperiod);
 }
 
 } // namespace data

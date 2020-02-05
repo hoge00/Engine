@@ -18,7 +18,6 @@
 
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/bond.hpp>
-#include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
@@ -156,7 +155,7 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
     registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
 
-    registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>()); 
+    registerBuilder(boost::make_shared<DiscountingBondEngineBuilder>());
 
     registerBuilder(boost::make_shared<AnalyticHaganCmsCouponPricerBuilder>());
     registerBuilder(boost::make_shared<NumericalHaganCmsCouponPricerBuilder>());
