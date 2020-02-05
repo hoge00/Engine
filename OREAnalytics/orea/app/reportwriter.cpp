@@ -692,7 +692,6 @@ void ReportWriter::writeStatistics(Report& report,
                                    boost::shared_ptr<Market> market,
                                    const string& configuration) {
     LOG("portfolio statistics");
-    DayCounter dc = ActualActual();
     report.addColumn("TradeId", string())
           .addColumn("TradeType", string())
           .addColumn("YTM", double(), 6)
