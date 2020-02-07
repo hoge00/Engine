@@ -42,13 +42,25 @@ using ore::data::Market;
 using QuantLib::PricingEngine;
 using QuantLib::Disposable;
 
+namespace {
+    std::map<std::string, std::set<std::string>> merge(const std::string& type, const std::string& style) {
+        return std::map<std::string, std::set<std::string>> { std::make_pair(type, std::set<std::string> { style }) };
+    }
+}
+
 namespace ore {
 namespace data {
 
 AbstractDiscountingBondEngineBuilder::AbstractDiscountingBondEngineBuilder(const std::string &model,
                                                                            const std::string &engine,
                                                                            const std::string& type)
-    : CachingEngineBuilder(model, engine, {type}) {}
+    : CachingEngineBuilder(model, engine, { type }) {}
+
+AbstractDiscountingBondEngineBuilder::AbstractDiscountingBondEngineBuilder(const std::string &model,
+                                                                           const std::string &engine,
+                                                                           const std::string& type,
+                                                                           const std::string& style)
+    : CachingEngineBuilder(model, engine, merge(type, style)) {}
 
 DiscountingBondEngineBuilder::DiscountingBondEngineBuilder()
     : DiscountingBondEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngine") {}
@@ -57,7 +69,7 @@ DiscountingBondEngineBuilder::DiscountingBondEngineBuilder(const std::string& mo
     : AbstractDiscountingBondEngineBuilder(model, engine, "Bond") {}
 
 string DiscountingBondEngineBuilder::keyImpl(const BondEngineBuilderArgs& args) {
-    vector<string> tokens = { args.ccy().code(), args.creditCurveId(), args.securityId(), args.referenceCurveId() };
+    auto tokens = { args.ccy().code(), args.creditCurveId(), args.securityId(), args.referenceCurveId() };
     return boost::algorithm::join(tokens, "_");
 }
 
@@ -98,10 +110,10 @@ boost::shared_ptr<PricingEngine> DiscountingBondEngineBuilder::engineImpl(const 
 }
 
 MtmImpliedBondEngineBuilder::MtmImpliedBondEngineBuilder()
-: MtmImpliedBondEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngine") {}
+: MtmImpliedBondEngineBuilder("DiscountedCashflows", "DiscountingBondEngine") {}
 
 MtmImpliedBondEngineBuilder::MtmImpliedBondEngineBuilder(const std::string &model, const std::string &engine)
-: AbstractDiscountingBondEngineBuilder(model, engine, "Bond-MarkedToMarketImpliedSpread") {}
+: AbstractDiscountingBondEngineBuilder(model, engine, "Bond", "MarkedToMarketImpliedSpread") {}
 
 boost::shared_ptr<PricingEngine> MtmImpliedBondEngineBuilder::engineImpl(const BondEngineBuilderArgs& args) {
     // Fetching price
@@ -131,7 +143,7 @@ boost::shared_ptr<PricingEngine> MtmImpliedBondEngineBuilder::engineImpl(const B
 }
 
 string MtmImpliedBondEngineBuilder::keyImpl(const BondEngineBuilderArgs& args) {
-    vector<string> tokens = { args.ccy().code(), args.creditCurveId(), args.securityId(), args.referenceCurveId() };
+    auto tokens = { args.ccy().code(), args.creditCurveId(), args.securityId(), args.referenceCurveId() };
     return boost::algorithm::join(tokens, "_");
 }
 

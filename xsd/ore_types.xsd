@@ -464,5 +464,12 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="instrumentStyle">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="MarkedToMarketImpliedSpread"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+
 </xs:schema>
 

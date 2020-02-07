@@ -73,8 +73,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Date issueDate = parseDate(issueDate_);
     Calendar calendar = parseCalendar(calendar_);
     auto settlementDays = boost::lexical_cast<Natural>(settlementDays_);
-    auto fullTradeType = instrumentStyle().empty() ? tradeType() : tradeType() + "-" + instrumentStyle();
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(fullTradeType);
+    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_, instrumentStyle_);
 
     boost::shared_ptr<QuantLib::Bond> bond;
 
@@ -162,6 +161,7 @@ void Bond::fromXML(XMLNode* node) {
     settlementDays_ = XMLUtils::getChildValue(bondNode, "SettlementDays", true);
     calendar_ = XMLUtils::getChildValue(bondNode, "Calendar", true);
     issueDate_ = XMLUtils::getChildValue(bondNode, "IssueDate", true);
+    instrumentStyle_ = XMLUtils::getChildValue(bondNode, "InstrumentStyle", false);
     XMLNode* legNode = XMLUtils::getChildNode(bondNode, "LegData");
     while (legNode != nullptr) {
         auto ld = createLegData();

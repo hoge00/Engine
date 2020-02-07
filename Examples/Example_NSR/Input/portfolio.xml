@@ -14,6 +14,56 @@
       <IssuerId>CPTY_C</IssuerId>
       <SecurityId>FIXEDBOND1</SecurityId>
       <ReferenceCurveId>BENCHMARK_USD</ReferenceCurveId>
+      <InstrumentStyle>MarkedToMarketImpliedSpread</InstrumentStyle>
+      <SettlementDays>2</SettlementDays>
+      <Calendar>WeekendsOnly</Calendar>
+      <IssueDate>20150803</IssueDate>
+      <Maturity>20200803</Maturity>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>1000000.0</Notional>
+        </Notionals>
+        <DayCounter>30/360</DayCounter>
+        <PaymentConvention>F</PaymentConvention>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.01</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20150803</StartDate>
+            <EndDate>20200803</EndDate>
+            <Tenor>12M</Tenor>
+            <Calendar>WeekendsOnly</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </BondData>
+  </Trade>
+  <Trade id="FIXEDBOND2_TRADE1">
+    <TradeType>Bond</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF1</PortfolioId>
+      </PortfolioIds>
+      <AdditionalFields/>
+    </Envelope>
+    <BondData>
+      <IssuerId>CPTY_C</IssuerId>
+      <SecurityId>FIXEDBOND1</SecurityId>
+      <ReferenceCurveId>BENCHMARK_USD</ReferenceCurveId>
       <SettlementDays>2</SettlementDays>
       <Calendar>WeekendsOnly</Calendar>
       <IssueDate>20150803</IssueDate>

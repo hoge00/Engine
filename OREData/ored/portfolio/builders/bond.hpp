@@ -69,7 +69,15 @@ public:
     AbstractDiscountingBondEngineBuilder() = delete;
 
 protected:
-    AbstractDiscountingBondEngineBuilder(const std::string& model, const std::string& engine, const std::string& type);
+    AbstractDiscountingBondEngineBuilder(const std::string& model,
+                                         const std::string& engine,
+                                         const std::string& type);
+
+    AbstractDiscountingBondEngineBuilder(const std::string& model,
+                                         const std::string& engine,
+                                         const std::string& type,
+                                         const std::string& style);
+
 };
 
 class DiscountingBondEngineBuilder : public AbstractDiscountingBondEngineBuilder {
