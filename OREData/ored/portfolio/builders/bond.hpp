@@ -24,6 +24,11 @@
 #pragma once
 
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <utility>
+
+namespace QuantLib {
+class Bond;
+}
 
 namespace ore {
 namespace data {
@@ -32,25 +37,61 @@ namespace data {
 /*! Pricing engines are cached by security id
 \ingroup builders
 */
-template <typename... Args>
-using BondEngineBuilder = CachingPricingEngineBuilder<string, const Currency&, const string&, const string&, Args...>;
 
-class DiscountingBondEngineBuilder : public BondEngineBuilder<const string&> {
+class BondEngineBuilderArgs  {
+public:
+    BondEngineBuilderArgs(Currency ccy, string creditCurveId, string securityId, string referenceCurveId, ext::shared_ptr<QuantLib::Bond> bond)
+    : ccy_(std::move(ccy)),
+    creditCurveId_(std::move(creditCurveId)),
+    securityId_(std::move(securityId)),
+    referenceCurveId_(std::move(referenceCurveId)),
+    bond_(bond) {}
+
+    const Currency& ccy() const { return ccy_; }
+    const string& creditCurveId() const { return creditCurveId_; }
+    const string& securityId() const { return securityId_; }
+    const string& referenceCurveId() const { return referenceCurveId_; }
+    ext::shared_ptr<QuantLib::Bond> bond() const { return bond_; }
+
+private:
+    const Currency ccy_;
+    const string creditCurveId_;
+    const string securityId_;
+    const string referenceCurveId_;
+    const ext::shared_ptr<QuantLib::Bond> bond_;
+};
+
+template <typename... Args>
+using BondEngineBuilder = CachingPricingEngineBuilder<string, const BondEngineBuilderArgs&, Args...>;
+
+class AbstractDiscountingBondEngineBuilder : public BondEngineBuilder<> {
+public:
+    AbstractDiscountingBondEngineBuilder() = delete;
+
+protected:
+    AbstractDiscountingBondEngineBuilder(const std::string& model, const std::string& engine, const std::string& type);
+};
+
+class DiscountingBondEngineBuilder : public AbstractDiscountingBondEngineBuilder {
 public:
     DiscountingBondEngineBuilder();
 
 protected:
     DiscountingBondEngineBuilder(const std::string& model, const std::string& engine);
 
-    string keyImpl(const Currency& ccy,
-                   const string& creditCurveId,
-                   const string& securityId,
-                   const string& referenceCurveId) override;
+    string keyImpl(const BondEngineBuilderArgs&) override;
+    boost::shared_ptr<PricingEngine> engineImpl(const BondEngineBuilderArgs&) override;
+};
 
-    boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy,
-                                                const string& creditCurveId,
-                                                const string& securityId,
-                                                const string& referenceCurveId) override;
+class MtmImpliedBondEngineBuilder : public AbstractDiscountingBondEngineBuilder {
+public:
+    MtmImpliedBondEngineBuilder();
+
+protected:
+    MtmImpliedBondEngineBuilder(const std::string& model, const std::string& engine);
+
+    string keyImpl(const BondEngineBuilderArgs&) override;
+    boost::shared_ptr<PricingEngine> engineImpl(const BondEngineBuilderArgs&) override;
 };
 
 } // namespace data

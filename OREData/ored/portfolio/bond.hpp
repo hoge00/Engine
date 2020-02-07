@@ -22,6 +22,7 @@
  */
 #pragma once
 
+#include <ql/shared_ptr.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/trade.hpp>
 
@@ -35,43 +36,43 @@ namespace data {
 class Bond : public Trade {
 public:
     //! Default constructor
-    Bond() : Trade("Bond"), zeroBond_(false) {}
+    Bond() : Trade("Bond"), faceAmount_(0), zeroBond_(false)  {}
 
     //! Constructor for coupon bonds
     Bond(Envelope env, string issuerId, string creditCurveId, string securityId, string referenceCurveId,
-         string settlementDays, string calendar, string issueDate, LegData& coupons)
+         string settlementDays, string calendar, string issueDate, LegData& coupons, const string& instrumentStyle = "")
         : Trade("Bond", env), issuerId_(issuerId), creditCurveId_(creditCurveId), securityId_(securityId),
           referenceCurveId_(referenceCurveId), settlementDays_(settlementDays), calendar_(calendar),
           issueDate_(issueDate), coupons_(std::vector<LegData>{coupons}), faceAmount_(0), maturityDate_(), currency_(),
-          zeroBond_(false) {}
+          zeroBond_(false), instrumentStyle_(instrumentStyle) {}
 
     //! Constructor for coupon bonds with multiple phases (represented as legs)
     Bond(Envelope env, string issuerId, string creditCurveId, string securityId, string referenceCurveId,
-         string settlementDays, string calendar, string issueDate, const std::vector<LegData>& coupons)
+         string settlementDays, string calendar, string issueDate, const std::vector<LegData>& coupons,
+         const string& instrumentStyle = "")
         : Trade("Bond", env), issuerId_(issuerId), creditCurveId_(creditCurveId), securityId_(securityId),
           referenceCurveId_(referenceCurveId), settlementDays_(settlementDays), calendar_(calendar),
-          issueDate_(issueDate), coupons_(coupons), faceAmount_(0), maturityDate_(), currency_(), zeroBond_(false) {}
+          issueDate_(issueDate), coupons_(coupons), faceAmount_(0), maturityDate_(), currency_(), zeroBond_(coupons.empty()), instrumentStyle_(instrumentStyle) {}
 
     //! Constructor for zero bonds
     Bond(Envelope env, string issuerId, string creditCurveId, string securityId, string referenceCurveId,
          string settlementDays, string calendar, Real faceAmount, string maturityDate, string currency,
-         string issueDate)
+         string issueDate, const string& instrumentStyle = "")
         : Trade("Bond", env), issuerId_(issuerId), creditCurveId_(creditCurveId), securityId_(securityId),
           referenceCurveId_(referenceCurveId), settlementDays_(settlementDays), calendar_(calendar),
           issueDate_(issueDate), coupons_(), faceAmount_(faceAmount), maturityDate_(maturityDate), currency_(currency),
-          zeroBond_(true) {}
+          zeroBond_(true), instrumentStyle_(instrumentStyle) {}
 
     // Build QuantLib/QuantExt instrument, link pricing engine
-    virtual void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const boost::shared_ptr<EngineFactory>&) override;
 
     //! Return the fixings that will be requested to price the Bond given the \p settlementDate.
-    std::map<std::string, std::set<QuantLib::Date>> fixings(
-        const QuantLib::Date& settlementDate = QuantLib::Date()) const override;
+    std::map<std::string, std::set<QuantLib::Date>> fixings(const QuantLib::Date&) const override;
 
-    virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
 
-    boost::shared_ptr<const StatisticsData> statistics(boost::shared_ptr<Market> market) const override ;
+    ext::shared_ptr<const StatisticsData> statistics(ext::shared_ptr<Market>) const override;
 
     const string& issuerId() const { return issuerId_; }
     const string& creditCurveId() const { return creditCurveId_; }
@@ -84,6 +85,7 @@ public:
     const Real& faceAmount() const { return faceAmount_; }
     const string& maturityDate() const { return maturityDate_; }
     const string& currency() const { return currency_; }
+    const string& instrumentStyle() const { return instrumentStyle_; }
 
     bool isZeroBond() const;
 
@@ -103,6 +105,7 @@ private:
     string maturityDate_;
     string currency_;
     bool zeroBond_;
+    string instrumentStyle_;
 
     /*! A bond may consist of multiple legs joined together to create a single leg. This member stores the 
         separate legs so that fixings can be retrieved later for legs that have fixings.

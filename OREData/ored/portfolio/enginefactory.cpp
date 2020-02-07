@@ -17,6 +17,7 @@
 */
 
 #include <boost/make_shared.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
@@ -86,7 +87,8 @@ EngineFactory::EngineFactory(const boost::shared_ptr<EngineData>& engineData, co
 void EngineFactory::registerBuilder(const boost::shared_ptr<EngineBuilder>& builder) {
     const string& modelName = builder->model();
     const string& engineName = builder->engine();
-    LOG("EngineFactory registering builder for model:" << modelName << " and engine:" << engineName);
+    auto tradetypes = boost::algorithm::join(builder->tradeTypes(), ",");
+    LOG("EngineFactory registering builder for model:" << modelName << " and engine:" << engineName << " for types: " << tradetypes);
     builders_[make_tuple(modelName, engineName, builder->tradeTypes())] = builder;
 }
 
@@ -156,6 +158,7 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
 
     registerBuilder(boost::make_shared<DiscountingBondEngineBuilder>());
+    registerBuilder(boost::make_shared<MtmImpliedBondEngineBuilder>());
 
     registerBuilder(boost::make_shared<AnalyticHaganCmsCouponPricerBuilder>());
     registerBuilder(boost::make_shared<NumericalHaganCmsCouponPricerBuilder>());

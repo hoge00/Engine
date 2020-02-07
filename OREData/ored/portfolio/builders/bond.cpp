@@ -16,14 +16,21 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <vector>
 #include <boost/make_shared.hpp>
+#include <boost/algorithm/string/join.hpp>
 
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/log.hpp>
 
+#include <qle/instruments/impliedbondspread.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
+#include <ql/pricingengines/bond/bondfunctions.hpp>
+#include <ql/pricingengines/bond/discountingbondengine.hpp>
+#include <ql/instruments/bond.hpp>
+#include <ql/time/daycounters/all.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
 
 using std::map;
@@ -38,21 +45,28 @@ using QuantLib::Disposable;
 namespace ore {
 namespace data {
 
-DiscountingBondEngineBuilder::DiscountingBondEngineBuilder(const std::string& model, const std::string& engine)
-    : CachingEngineBuilder(model, engine, {"Bond"}) {}
-
-string DiscountingBondEngineBuilder::keyImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
-                                             const string& referenceCurveId) {
-    return ccy.code() + "_" + creditCurveId + "_" + securityId + "_" + referenceCurveId;
-}
+AbstractDiscountingBondEngineBuilder::AbstractDiscountingBondEngineBuilder(const std::string &model,
+                                                                           const std::string &engine,
+                                                                           const std::string& type)
+    : CachingEngineBuilder(model, engine, {type}) {}
 
 DiscountingBondEngineBuilder::DiscountingBondEngineBuilder()
     : DiscountingBondEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngine") {}
 
-boost::shared_ptr<PricingEngine> DiscountingBondEngineBuilder::engineImpl(const Currency& ccy,
-                                                                          const string& creditCurveId,
-                                                                          const string& securityId,
-                                                                          const string& referenceCurveId) {
+DiscountingBondEngineBuilder::DiscountingBondEngineBuilder(const std::string& model, const std::string& engine)
+    : AbstractDiscountingBondEngineBuilder(model, engine, "Bond") {}
+
+string DiscountingBondEngineBuilder::keyImpl(const BondEngineBuilderArgs& args) {
+    vector<string> tokens = { args.ccy().code(), args.creditCurveId(), args.securityId(), args.referenceCurveId() };
+    return boost::algorithm::join(tokens, "_");
+}
+
+boost::shared_ptr<PricingEngine> DiscountingBondEngineBuilder::engineImpl(const BondEngineBuilderArgs& args) {
+
+    const auto& referenceCurveId = args.referenceCurveId();
+    const auto& creditCurveId = args.creditCurveId();
+    const auto& securityId = args.securityId();
+
     Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
     Handle<DefaultProbabilityTermStructure> dpts;
     // credit curve may not always be used. If credit curve ID is empty proceed without it
@@ -77,21 +91,48 @@ boost::shared_ptr<PricingEngine> DiscountingBondEngineBuilder::engineImpl(const 
     } catch (...) {
     }
 
-    Handle<Quote> price;
-    try {
-        // price is optional, pass empty handle to engine if not given
-        price = market_->securityPrice(securityId, configuration(MarketContext::pricing));
-        DLOG("Using price of [" << price->value() << "] for " << securityId)
-    } catch (...) {
-    }
-
     string tsperiodStr = engineParameter("TimestepPeriod");
     Period tsperiod = parsePeriod(tsperiodStr);
 
-    if (price.empty())
-        return boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, spread, tsperiod);
-    else
-        return QuantExt::DiscountingRiskyBondEngine::pricedBased(yts, price, tsperiod);
+    return boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, spread, tsperiod);
+}
+
+MtmImpliedBondEngineBuilder::MtmImpliedBondEngineBuilder()
+: MtmImpliedBondEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngine") {}
+
+MtmImpliedBondEngineBuilder::MtmImpliedBondEngineBuilder(const std::string &model, const std::string &engine)
+: AbstractDiscountingBondEngineBuilder(model, engine, "Bond-MarkedToMarketImpliedSpread") {}
+
+boost::shared_ptr<PricingEngine> MtmImpliedBondEngineBuilder::engineImpl(const BondEngineBuilderArgs& args) {
+    // Fetching price
+    auto price = market_->securityPrice(args.securityId(), configuration(MarketContext::pricing));
+    DLOG("Using price of [" << price->value() << "] for " << args.securityId())
+    // Fetching benchmark discount curve
+    auto yts = market_->yieldCurve(args.referenceCurveId(), configuration(MarketContext::pricing));
+    // Fetching bond
+    auto bond = args.bond();
+    auto dcc = yts->dayCounter();
+    // Assuming annual continuous compounding
+    auto zspread = BondFunctions::zSpread(*bond,
+                                          price->value(),
+                                          yts.currentLink(),
+                                          yts->dayCounter(),
+                                          Compounding::Continuous,
+                                          Frequency::Annual);
+
+    DLOG("Implied spread [" << zspread << "] for " << args.securityId())
+
+    // Build a spreaded term structure with the implied spread
+    auto spreadQuote = Handle<Quote>(boost::make_shared<SimpleQuote>(zspread));
+    auto spreadCurve = Handle<YieldTermStructure>(
+            boost::make_shared<ZeroSpreadedTermStructure>(yts, spreadQuote, Compounding::Continuous, Frequency::Annual));
+    auto engine = ext::shared_ptr<PricingEngine>(new DiscountingBondEngine(spreadCurve, boost::none));
+    return engine;
+}
+
+string MtmImpliedBondEngineBuilder::keyImpl(const BondEngineBuilderArgs& args) {
+    vector<string> tokens = { args.ccy().code(), args.creditCurveId(), args.securityId(), args.referenceCurveId() };
+    return boost::algorithm::join(tokens, "_");
 }
 
 } // namespace data

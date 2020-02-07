@@ -30,6 +30,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
+#include <ql/errors.hpp>
 #include <ql/instruments/bond.hpp>
 #include <ql/instruments/bonds/zerocouponbond.hpp>
 #include <ql/pricingengines/bond/bondfunctions.hpp>
@@ -69,11 +70,12 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // Clear the separateLegs_ member here. Should be done in reset() but it is not virtual
     separateLegs_.clear();
 
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
-
     Date issueDate = parseDate(issueDate_);
     Calendar calendar = parseCalendar(calendar_);
-    Natural settlementDays = boost::lexical_cast<Natural>(settlementDays_);
+    auto settlementDays = boost::lexical_cast<Natural>(settlementDays_);
+    auto fullTradeType = instrumentStyle().empty() ? tradeType() : tradeType() + "-" + instrumentStyle();
+    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(fullTradeType);
+
     boost::shared_ptr<QuantLib::Bond> bond;
 
     // FIXME: zero bonds are always long (firstLegIsPayer = false, mult = 1.0)
@@ -92,10 +94,9 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                                                         << ") not equal to leg #0 currency ("
                                                                         << coupons_[0].currency());
             }
-            Leg leg;
-            auto configuration = builder->configuration(MarketContext::pricing);
             auto legBuilder = engineFactory->legBuilder(coupons_[i].legType());
-            leg = legBuilder->buildLeg(coupons_[i], engineFactory, configuration);
+            auto configuration = builder->configuration(MarketContext::pricing);
+            auto leg = legBuilder->buildLeg(coupons_[i], engineFactory, configuration);
             separateLegs_.push_back(leg);
             
             // Initialise the set of [index name, leg] index pairs
@@ -113,9 +114,10 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     Currency currency = parseCurrency(currency_);
 
-    auto bondBuilder = boost::dynamic_pointer_cast<DiscountingBondEngineBuilder>(builder);
+    auto bondBuilder = boost::dynamic_pointer_cast<AbstractDiscountingBondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
-    bond->setPricingEngine(bondBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_));
+    BondEngineBuilderArgs args { currency, creditCurveId_, securityId_, referenceCurveId_, bond };
+    bond->setPricingEngine(bondBuilder->engine(args));
 
     instrument_.reset(new VanillaInstrument(bond, mult));
 
@@ -188,13 +190,15 @@ XMLNode* Bond::toXML(XMLDocument& doc) {
 }
 
 bool Bond::isZeroBond() const {
-    return coupons_.size() == 0;
+    QL_ASSERT((coupons_.empty() && zeroBond_) || (!coupons_.empty() && !zeroBond_),
+            "Expected zero bond with no coupons or coupon bond with > 1 coupon");
+    return zeroBond_;
 }
 
-boost::shared_ptr<const StatisticsData> Bond::statistics(boost::shared_ptr<Market> market) const {
+ext::shared_ptr<const StatisticsData> Bond::statistics(boost::shared_ptr<Market> market) const {
     if (isZeroBond()) {
         // Only calculate for coupon bonds
-        return boost::shared_ptr<const StatisticsData>{new StatisticsData{}};
+        return ext::shared_ptr<const StatisticsData>{new StatisticsData{}};
     }
     else {
         // use the first leg as definition for the coupon parameters, the whole cashflow is collapsed to one leg
@@ -232,7 +236,7 @@ boost::shared_ptr<const StatisticsData> Bond::statistics(boost::shared_ptr<Marke
         stats->modifiedDuration(modDuration);
         stats->yieldToMaturity(ytm);
         stats->convexity(convexity);
-        return boost::shared_ptr<const StatisticsData> { stats };
+        return ext::shared_ptr<const StatisticsData> { stats };
     }
 }
 

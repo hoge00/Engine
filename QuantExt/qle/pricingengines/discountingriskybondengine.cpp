@@ -23,6 +23,7 @@
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
+#include <utility>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
@@ -33,15 +34,13 @@ using namespace QuantLib;
 namespace QuantExt {
 
 DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
-                                                       const Handle<DefaultProbabilityTermStructure>& defaultCurve,
-                                                       const Handle<Quote>& recoveryRate,
+                                                       Handle<DefaultProbabilityTermStructure> defaultCurve,
+                                                       Handle<Quote> recoveryRate,
                                                        const Handle<Quote>& securitySpread,
                                                        Period timestepPeriod,
                                                        boost::optional<bool> includeSettlementDateFlows)
-    : defaultCurve_(defaultCurve), recoveryRate_(recoveryRate), securitySpread_(securitySpread),
+    : defaultCurve_(std::move(defaultCurve)), recoveryRate_(std::move(recoveryRate)), securitySpread_(securitySpread),
       timestepPeriod_(timestepPeriod), includeSettlementDateFlows_(includeSettlementDateFlows) {
-    // TODO: make a private function that retrieves a ZeroSpreadedTermStructure if spread or price are given and
-    // also include compounding info, see: https://quant.stackexchange.com/questions/42710/quantlib-bondfunctions-zspread-does-not-match-clean-price-exactly
     discountCurve_ =
         securitySpread_.empty()
             ? discountCurve
@@ -50,20 +49,6 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStr
     registerWith(defaultCurve_);
     registerWith(recoveryRate_);
     registerWith(securitySpread_);
-}
-
-DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(Handle<YieldTermStructure> discountCurve,
-                                                       Handle<Quote> securityPrice,
-                                                       Period timestepPeriod,
-                                                       boost::optional<bool> includeSettlementDateFlows)
-// TODO: make a private function that retrieves a ZeroSpreadedTermStructure if spread or price are given and
-// also include compounding info, see: https://quant.stackexchange.com/questions/42710/quantlib-bondfunctions-zspread-does-not-match-clean-price-exactly
-: discountCurve_(std::move(discountCurve)),
-  securityPrice_(std::move(securityPrice)),
-  timestepPeriod_(timestepPeriod),
-  includeSettlementDateFlows_(includeSettlementDateFlows) {
-    registerWith(discountCurve_);
-    registerWith(securityPrice_);
 }
 
 void DiscountingRiskyBondEngine::calculate() const {
@@ -87,9 +72,6 @@ void DiscountingRiskyBondEngine::calculate() const {
 
 Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate, const Leg& cashflows) const {
     Real npvValue = 0;
-
-    QL_REQUIRE(securityPrice_.empty() || securitySpread_.empty(),
-            "ambiguous spread: explicit securitySpread and implicit through securityPrice");
 
     // handle case where we wish to price simply with benchmark curve and scalar security spread
     // i.e. credit curve term structure (and recovery) have not been specified
@@ -163,17 +145,6 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate, const Leg& cashflows
     }
 
     return npvValue;
-}
-
-ext::shared_ptr<Bond::engine> DiscountingRiskyBondEngine::pricedBased(const Handle<YieldTermStructure> &discountCurve,
-                                                                      const Handle<Quote> &price,
-                                                                      Period timestepPeriod,
-                                                                      boost::optional<bool> includeSettlementDateFlows) {
-
-    return ext::shared_ptr<Bond::engine>(new DiscountingRiskyBondEngine { discountCurve,
-                                                                          price,
-                                                                          timestepPeriod,
-                                                                          includeSettlementDateFlows });
 }
 
 } // namespace QuantExt

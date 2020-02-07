@@ -83,6 +83,7 @@ BOOST_AUTO_TEST_CASE(testBondSpreads) {
     Handle<Quote> tmpSpreadH(tmpSpread);
     boost::shared_ptr<PricingEngine> tmpEngine;
     tmpEngine.reset(new QuantExt::DiscountingRiskyBondEngine(yts, dpts, recovery, tmpSpreadH, 1 * Months));
+    bond->setPricingEngine(tmpEngine);
 
     Real impliedSpread = QuantExt::detail::ImpliedBondSpreadHelper::calculate(bond, tmpEngine, tmpSpread, price, false,
                                                                               1.e-12, 10000, -0.02, 1.00);
@@ -93,6 +94,7 @@ BOOST_AUTO_TEST_CASE(testBondSpreads) {
     BOOST_CHECK_EQUAL(price, price2);
 
     // which spread would mean the bond price is par?
+    bond->setPricingEngine(pricingEngine);
     Real parRedemption = 100.0;
     Real impliedSpreadPar = QuantExt::detail::ImpliedBondSpreadHelper::calculate(
         bond, tmpEngine, tmpSpread, parRedemption, false, 1.e-12, 10000, -0.02, 1.00);
