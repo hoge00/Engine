@@ -157,6 +157,12 @@ public:
     Handle<Quote> securityPrice(const string& securityID,
                                 const string& configuration = Market::defaultConfiguration) const override;
 
+    //! Bond Prices quote type
+    Bond::Price::Type securityPriceType(const string& key, const string& configuration) const override;
+
+    //! Bond Prices and quote type
+    pair<Handle<Quote>, Bond::Price::Type> securityPriceAndType(const string& key, const string& configuration) const override;
+
     //! Cpi Base Quotes
     Handle<QuantExt::InflationIndexObserver> baseCpis(const string& index,
                                                       const string& configuration = Market::defaultConfiguration) const;
@@ -216,7 +222,7 @@ protected:
     map<pair<string, string>, Handle<Quote>> equitySpots_;
     map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
     map<pair<string, string>, Handle<Quote>> securitySpreads_;
-    map<pair<string, string>, Handle<Quote>> securityPrices_;
+    map<pair<string, string>, pair<Handle<Quote>, Bond::Price::Type>> securityPrices_;
     map<pair<string, string>, Handle<QuantExt::InflationIndexObserver>> baseCpis_;
     map<tuple<string, string, string>, Handle<QuantExt::CorrelationTermStructure>> correlationCurves_;
     map<pair<string, string>, Handle<Quote>> commoditySpots_;

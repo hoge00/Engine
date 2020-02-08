@@ -29,6 +29,7 @@
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
+#include <ql/instruments/bond.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
@@ -195,6 +196,16 @@ public:
     //! \name Bond Prices
     //@{
     virtual Handle<Quote> securityPrice(const string& securityID, const string& configuration) const = 0;
+    //@}
+
+    //! \name Bond Prices quote type
+    //@{
+    virtual Bond::Price::Type securityPriceType(const string& key, const string& configuration) const = 0;
+    //@}
+
+    //! Bond Prices and quote type
+    //@{
+    virtual std::pair<Handle<Quote>, Bond::Price::Type> securityPriceAndType(const string& key, const string& configuration) const = 0;
     //@}
 
     //! \name Commodity price curves

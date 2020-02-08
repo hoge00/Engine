@@ -53,6 +53,7 @@ Security::Security(const Date& asof, const SecuritySpec& spec, const Loader& loa
                     boost::dynamic_pointer_cast<SecurityPriceQuote>(loader.get(priceQuote, asof));
             QL_REQUIRE(q, "Failed to cast " << priceQuote << " to SecurityPriceQuote");
             price_ = q->quote();
+            priceType_ = config->priceType();
         }
 
         // get recovery quote

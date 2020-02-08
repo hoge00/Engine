@@ -116,8 +116,12 @@ MtmImpliedBondEngineBuilder::MtmImpliedBondEngineBuilder(const std::string &mode
 : AbstractDiscountingBondEngineBuilder(model, engine, "Bond", "MarkedToMarketImpliedSpread") {}
 
 boost::shared_ptr<PricingEngine> MtmImpliedBondEngineBuilder::engineImpl(const BondEngineBuilderArgs& args) {
-    // Fetching price
-    auto price = market_->securityPrice(args.securityId(), configuration(MarketContext::pricing));
+    // Fetching price (TODO: Support dirty quotes)
+    auto priceAndType = market_->securityPriceAndType(args.securityId(), configuration(MarketContext::pricing));
+    auto price = priceAndType.first;
+    auto priceType = priceAndType.second;
+    QL_REQUIRE(Bond::Price::Type::Clean == priceType, "MtmImpliedBondEngineBuilder only supports clean price quotes");
+
     DLOG("Using price of [" << price->value() << "] for " << args.securityId())
     // Fetching benchmark discount curve
     auto yts = market_->yieldCurve(args.referenceCurveId(), configuration(MarketContext::pricing));

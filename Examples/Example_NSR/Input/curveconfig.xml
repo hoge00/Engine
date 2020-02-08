@@ -4,7 +4,7 @@
     <Security>
       <CurveId>FIXEDBOND1</CurveId>
       <CurveDescription>FixedBond1Price</CurveDescription>
-      <PriceQuote>BOND/PRICE/FIXEDBOND1</PriceQuote>
+      <PriceQuote type="clean">BOND/PRICE/FIXEDBOND1</PriceQuote>
       <SpreadQuote>BOND/YIELD_SPREAD/FIXEDBOND1</SpreadQuote>
     </Security>
   </Securities>

@@ -21,7 +21,7 @@
     \ingroup
 */
 
-#include <boost/range/adaptor/map.hpp>
+#include <boost/algorithm/string.hpp>
 #include <ored/marketdata/basecorrelationcurve.hpp>
 #include <ored/marketdata/capfloorvolcurve.hpp>
 #include <ored/marketdata/cdsvolcurve.hpp>
@@ -57,6 +57,19 @@ using namespace QuantLib;
 using QuantExt::PriceTermStructure;
 using QuantExt::PriceTermStructureAdapter;
 using QuantExt::EquityIndex;
+
+namespace {
+    Bond::Price::Type priceType(const ore::data::Security& security) {
+        auto priceType = security.priceType();
+        if (priceType.empty() || "clean" == boost::algorithm::to_lower_copy(priceType)) {
+            return Bond::Price::Type::Clean;
+        }
+        else if ("dirty" == boost::algorithm::to_lower_copy(priceType)) {
+            return Bond::Price::Type::Dirty;
+        }
+        QL_FAIL("Failed to convert [" << priceType << "] to a bond price quote type (e.g. \"clean\", \"dirty\")");
+    }
+}
 
 namespace ore {
 namespace data {
@@ -727,7 +740,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             if (!security->spread().empty())
                                 securitySpreads_[make_pair(configuration.first, it.first)] = security->spread();
                             if (!security->price().empty())
-                                securityPrices_[make_pair(configuration.first, it.first)] = security->price();
+                                securityPrices_[make_pair(configuration.first, it.first)] = make_pair(security->price(), priceType(*security));
                             if (!security->recoveryRate().empty())
                                 recoveryRates_[make_pair(configuration.first, it.first)] = security->recoveryRate();
                             if (!security->cpr().empty())

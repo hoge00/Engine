@@ -470,6 +470,12 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="securityQuoteType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="clean"/>
+      <xs:enumeration value="dirty"/>
+    </xs:restriction>
+  </xs:simpleType>
 
 </xs:schema>
 

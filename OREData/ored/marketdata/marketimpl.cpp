@@ -230,7 +230,15 @@ Handle<Quote> MarketImpl::securitySpread(const string& key, const string& config
 }
 
 Handle<Quote> MarketImpl::securityPrice(const string& key, const string& configuration) const {
-    return lookup<Handle<Quote>>(securityPrices_, key, configuration, "security price");
+    return securityPriceAndType(key, configuration).first;
+}
+
+Bond::Price::Type MarketImpl::securityPriceType(const string& key, const string& configuration) const {
+    return securityPriceAndType(key, configuration).second;
+}
+
+pair<Handle<Quote>, Bond::Price::Type> MarketImpl::securityPriceAndType(const string& key, const string& configuration) const {
+    return lookup<pair<Handle<Quote>, Bond::Price::Type>>(securityPrices_, key, configuration, "security price");
 }
 
 Handle<QuantExt::InflationIndexObserver> MarketImpl::baseCpis(const string& key, const string& configuration) const {
