@@ -71,6 +71,10 @@ public:
 protected:
     AbstractDiscountingBondEngineBuilder(const std::string& model,
                                          const std::string& engine,
+                                         const std::set<std::string>& types);
+
+    AbstractDiscountingBondEngineBuilder(const std::string& model,
+                                         const std::string& engine,
                                          const std::string& type);
 
     AbstractDiscountingBondEngineBuilder(const std::string& model,

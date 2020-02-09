@@ -197,6 +197,7 @@ void EngineFactory::addDefaultBuilders() {
     registerLegBuilder(boost::make_shared<CMSSpreadLegBuilder>());
     registerLegBuilder(boost::make_shared<DigitalCMSSpreadLegBuilder>());
     registerLegBuilder(boost::make_shared<EquityLegBuilder>());
+    registerLegBuilder(boost::make_shared<AgencyMBSLegBuilder>());
 }
 
 void EngineFactory::addExtraBuilders(const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,
