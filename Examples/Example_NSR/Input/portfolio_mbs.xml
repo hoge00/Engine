@@ -11,7 +11,6 @@
       <AdditionalFields/>
     </Envelope>
     <MBSData>
-
     </MBSData>
     <BondData>
       <IssuerId>CPTY_C</IssuerId>
@@ -20,9 +19,7 @@
       <SettlementDays>2</SettlementDays>
       <Calendar>WeekendsOnly</Calendar>
       <IssueDate>20150803</IssueDate>
-      <Maturity>20200803</Maturity>
       <LegData>
-        <LegType>Fixed</LegType>
         <Payer>false</Payer>
         <Currency>USD</Currency>
         <Notionals>
@@ -30,20 +27,20 @@
         </Notionals>
         <DayCounter>30/360</DayCounter>
         <PaymentConvention>F</PaymentConvention>
-        <MBSLegData>
-          <Rates>
-            <WAC>0.06</WAC>
-          </Rates>
-        </MBSLegData>
+        <LegType>AgencyMBS</LegType>
+        <AgencyMBSLegData>
+          <WAC>0.06</WAC>
+          <ServiceFee>0.005</ServiceFee>
+        </AgencyMBSLegData>
         <ScheduleData>
           <Rules>
             <StartDate>20150803</StartDate>
-            <EndDate>20200803</EndDate>
-            <Tenor>12M</Tenor>
-            <Calendar>WeekendsOnly</Calendar>
-            <Convention>F</Convention>
-            <TermConvention>F</TermConvention>
-            <Rule>Forward</Rule>
+            <EndDate>20180803</EndDate>
+            <Tenor>1M</Tenor>
+            <Calendar/>
+            <Convention/>
+            <TermConvention/>
+            <Rule/>>
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>

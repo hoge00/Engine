@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/bond.hpp>
 
 namespace ore {
 namespace data {
@@ -32,7 +32,7 @@ class MBSData;
 /*!
 \ingroup tradedata
 */
-class MBS : public Trade {
+class MBS : public Bond {
 public:
     MBS();
     ~MBS() override;
@@ -46,7 +46,6 @@ public:
     XMLNode* toXML(XMLDocument& doc) override;
 
 private:
-    std::unique_ptr<Bond> bond_;
     std::unique_ptr<MBSData> data_;
 };
 

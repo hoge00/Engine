@@ -98,5 +98,12 @@ public:
                  const string& configuration) const override;
 };
 
+class AgencyMBSLegBuilder : public LegBuilder {
+public:
+    AgencyMBSLegBuilder() : LegBuilder("AgencyMBS") {}
+    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+                 const string& configuration) const override;
+};
+
 } // namespace data
 } // namespace ore

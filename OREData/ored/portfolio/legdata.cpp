@@ -366,6 +366,24 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
+XMLNode *AgencyMBSLegData::toXML(XMLDocument &doc) {
+    // TODO
+    QL_FAIL("Not implemented");
+    return nullptr;
+}
+
+void AgencyMBSLegData::fromXML(XMLNode *node) {
+    XMLUtils::checkNode(node, legNodeName());
+    wac_ = XMLUtils::getChildValueAsDouble(node, "WAC", true);
+    serviceFee_ = XMLUtils::getChildValueAsDouble(node, "ServiceFee", false);
+    discretePayGrid_ = XMLUtils::getChildValueAsBool(node, "DiscretePaymentGrid", false);
+}
+
+Rate AgencyMBSLegData::effectiveCoupon() const {
+    QL_REQUIRE(wac_ > serviceFee_, "WAC must be larger than servicing fee");
+    return wac_ - serviceFee_;
+}
+
 void AmortizationData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "AmortizationData");
     type_ = XMLUtils::getChildValue(node, "Type");
@@ -487,6 +505,8 @@ boost::shared_ptr<LegAdditionalData> LegData::initialiseConcreteLegData(const st
         return boost::make_shared<DigitalCMSSpreadLegData>();
     } else if (legType == "Equity") {
         return boost::make_shared<EquityLegData>();
+    } else if (legType == "AgencyMBS") {
+        return boost::make_shared<AgencyMBSLegData>();
     } else {
         QL_FAIL("Unkown leg type " << legType);
     }
@@ -1251,6 +1271,41 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     return leg;
 }
 
+Leg makeAgencyMBSLeg(const LegData &data, const AgencyMBSLegData& agencyMBSData) {
+    Schedule schedule = makeSchedule(data.schedule());
+    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
+    QL_REQUIRE(!notionals.empty(), "Must have at least one notional value");
+    Real startNotional = notionals[0];
+    Frequency frequency = schedule.tenor().frequency();
+    QL_REQUIRE(frequency >= 1 && frequency <= 395, "Frequency f must satisfy: 1 <= f <= 395");
+    DayCounter dc = parseDayCounter(data.dayCounter());
+
+    //TODO: Check the compounding type, but FixedRateLeg in its current implementation defaults to 'Simple'
+    InterestRate convertedRate{agencyMBSData.wac(), dc, Compounded, frequency};
+    Real compoundFactor = convertedRate.compoundFactor(schedule.startDate(), schedule.endDate());
+    // TODO: Convert rate using QL functions
+    Rate periodRate = agencyMBSData.wac() / frequency;
+    Real annuity = periodRate * startNotional * compoundFactor / (compoundFactor - 1.);
+    DLOG("Calculated an annuity of [" << annuity << "]");
+    DLOG("Using effective rate [" << agencyMBSData.effectiveCoupon() << "]");
+
+    // The 'effective' coupon is the remainder of the WAC that is paid to investors, that is the service fee is already removed from it
+    vector<double> rates = buildScheduledVector({  agencyMBSData.effectiveCoupon() }, {}, schedule);
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    Natural paymentLag = data.paymentLag();
+    const Calendar& paymentCalendar = schedule.calendar();
+
+    AmortizationData amortizationData("Annuity", annuity, to_string(schedule.startDate()), to_string(schedule.endDate()), "", false);
+    applyAmortization(notionals, { amortizationData }, data, schedule, true, rates);
+    Leg leg = FixedRateLeg(schedule)
+            .withNotionals(notionals)
+            .withCouponRates(rates, dc)
+            .withPaymentAdjustment(bdc)
+            .withPaymentLag(paymentLag)
+            .withPaymentCalendar(paymentCalendar);
+    return leg;
+}
+
 Real currentNotional(const Leg& leg) {
     Date today = Settings::instance().evaluationDate();
     // assume the leg is sorted
@@ -1432,11 +1487,16 @@ vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notio
     LOG("Fixed Annuity notional schedule done");
     return nominals;
 }
-  
+
 void applyAmortization(std::vector<Real>& notionals, const LegData& data, const Schedule& schedule,
                        const bool annuityAllowed, const std::vector<Real>& rates) {
+    return applyAmortization(notionals, data.amortizationData(), data, schedule, annuityAllowed, rates);
+}
+
+void applyAmortization(std::vector<Real>& notionals, const std::vector<AmortizationData>& amortData, const LegData& data,
+                       const Schedule& schedule, const bool annuityAllowed, const std::vector<Real>& rates) {
     Date lastEndDate = Date::minDate();
-    for (auto const& amort : data.amortizationData()) {
+    for (auto const& amort : amortData) {
         if (!amort.initialized())
             continue;
         Date startDate = parseDate(amort.startDate());
@@ -1461,7 +1521,7 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
         // check that for a floating leg we only have one amortization block, if the type is annuity
         // we recognise a floating leg by an empty (fixed) rates vector
         if (rates.empty() && amortizationType == AmortizationType::Annuity) {
-            QL_REQUIRE(data.amortizationData().size() == 1,
+            QL_REQUIRE(amortData.size() == 1,
                        "Floating Leg supports only one amortisation block of type Annuity");
         }
     }

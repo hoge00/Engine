@@ -36,7 +36,10 @@ namespace data {
 class Bond : public Trade {
 public:
     //! Default constructor
-    Bond() : Trade("Bond"), faceAmount_(0), zeroBond_(false)  {}
+    Bond() : Trade("Bond"), faceAmount_(0), zeroBond_(false) {}
+
+    //! Constructor specifying type
+    Bond(const string& type) : Trade(type), faceAmount_(0), zeroBond_(false) {}
 
     //! Constructor for coupon bonds
     Bond(Envelope env, string issuerId, string creditCurveId, string securityId, string referenceCurveId,

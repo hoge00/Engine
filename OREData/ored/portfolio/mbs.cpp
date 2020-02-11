@@ -13,10 +13,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ql/experimental/amortizingbonds/amortizingfixedratebond.hpp>
 #include <ored/portfolio/mbs.hpp>
 #include <ored/portfolio/mbsdata.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/portfolio/builders/bond.hpp>
 
 namespace {
     std::unique_ptr<ore::data::MBSData> getData(ore::data::XMLNode* node) {
@@ -34,20 +36,21 @@ namespace data {
 using namespace std;
 using namespace QuantLib;
 
-MBS::MBS() : Trade("MBS") {}
+MBS::MBS() : Bond("MBS") {}
 
 MBS::~MBS() = default;
 
 void MBS::fromXML(XMLNode* node) {
-    auto bond = unique_ptr<Bond>(new Bond());
-    bond->fromXML(node);
-    bond_ = move(bond);
-    DLOG("Created underlying bond [" << bond_->securityId() << "]");
+    Bond::fromXML(node);
+    DLOG("Created underlying bond [" << securityId() << "]");
     data_ = getData(node);
 }
 
-void MBS::build(const boost::shared_ptr<EngineFactory> &) {
+void MBS::build(const boost::shared_ptr<EngineFactory> & engineFactory) {
+    DLOG("MBS::build() called for trade " << id());
+    QL_REQUIRE(coupons().size() == 1, tradeType_ << " only supports single leg");
 
+    Bond::build(engineFactory);
 }
 
 map<string, set<Date>> MBS::fixings(const Date &) const {

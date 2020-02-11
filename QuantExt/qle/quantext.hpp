@@ -93,6 +93,7 @@
 #include <qle/instruments/impliedbondspread.hpp>
 #include <qle/instruments/makeaverageois.hpp>
 #include <qle/instruments/makecds.hpp>
+#include <qle/instruments/mortgagebond.hpp>
 #include <qle/instruments/oibasisswap.hpp>
 #include <qle/instruments/oiccbasisswap.hpp>
 #include <qle/instruments/payment.hpp>
