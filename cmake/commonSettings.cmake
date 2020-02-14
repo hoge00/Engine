@@ -82,25 +82,6 @@ macro(get_library_name LIB_NAME OUTPUT_NAME)
     # MSVC: Give built library different names following code in 'ql/autolink.hpp'
     if(MSVC)
 
-        # - toolset
-        # ...taken from FindBoost.cmake
-        if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.10)
-            set(LIB_TOOLSET "-vc141")
-        elseif(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19)
-            set(LIB_TOOLSET "-vc140")
-        elseif(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 18)
-            set(LIB_TOOLSET "-vc120")
-        elseif(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17)
-            set(LIB_TOOLSET "-vc110")
-        elseif(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 16)
-            set(LIB_TOOLSET "-vc100")
-        elseif(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15)
-            set(LIB_TOOLSET "-vc90")
-        else()
-            message(FATAL_ERROR "Compiler below vc90 is not supported")
-        endif()
-        #message(STATUS " - Toolset: ${LIB_TOOLSET}")
-
         # - platform
         if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
             set(LIB_PLATFORM "-x64")
@@ -120,7 +101,7 @@ macro(get_library_name LIB_NAME OUTPUT_NAME)
         endif()
         #message(STATUS " - Linkage opt: ${LIB_RT_OPT}")
 
-        set(${OUTPUT_NAME} "${LIB_NAME}${LIB_TOOLSET}${LIB_PLATFORM}${LIB_THREAD_OPT}${LIB_RT_OPT}")
+        set(${OUTPUT_NAME} "${LIB_NAME}${LIB_PLATFORM}${LIB_THREAD_OPT}${LIB_RT_OPT}")
     else()
         set(${OUTPUT_NAME} ${LIB_NAME})
     endif()
