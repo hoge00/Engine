@@ -56,6 +56,9 @@ public:
     CachingEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes)
         : EngineBuilder(model, engine, tradeTypes) {}
 
+    CachingEngineBuilder(const string& model, const string& engine, const map<string, set<string>>& typesAndStyles)
+        : EngineBuilder(model, engine, typesAndStyles) {}
+
     //! Return a PricingEngine or a FloatingRateCouponPricer
     boost::shared_ptr<U> engine(Args... params) {
         T key = keyImpl(params...);

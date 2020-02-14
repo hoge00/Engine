@@ -161,12 +161,20 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const 
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value) {
-    if (value.size() == 0) {
+    XMLUtils::addChildAndAttributes(doc, n, name, value, map<string, string>{});
+}
+
+void XMLUtils::addChildAndAttributes(XMLDocument& doc, XMLNode* n, const string& name, const string& value,
+        const map<string, string>& attr) {
+    if (value.empty()) {
         addChild(doc, n, name);
     } else {
         XMLNode* node = doc.allocNode(name, value);
         QL_REQUIRE(n, "XML Node is NULL (adding " << name << ")");
-        n->insert_node(0, node);
+        n->insert_node(nullptr, node);
+        for_each(attr.begin(), attr.end(), [&doc, n] (const pair<string, string>& entry) {
+            XMLUtils::addAttribute(doc, n, entry.first, entry.second);
+        });
     }
 }
 

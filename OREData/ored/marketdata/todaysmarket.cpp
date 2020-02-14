@@ -21,7 +21,7 @@
     \ingroup
 */
 
-#include <boost/range/adaptor/map.hpp>
+#include <boost/algorithm/string.hpp>
 #include <ored/marketdata/basecorrelationcurve.hpp>
 #include <ored/marketdata/capfloorvolcurve.hpp>
 #include <ored/marketdata/cdsvolcurve.hpp>
@@ -57,6 +57,19 @@ using namespace QuantLib;
 using QuantExt::PriceTermStructure;
 using QuantExt::PriceTermStructureAdapter;
 using QuantExt::EquityIndex;
+
+namespace {
+    Bond::Price::Type priceType(const ore::data::Security& security) {
+        auto priceType = security.priceType();
+        if (priceType.empty() || "clean" == boost::algorithm::to_lower_copy(priceType)) {
+            return Bond::Price::Type::Clean;
+        }
+        else if ("dirty" == boost::algorithm::to_lower_copy(priceType)) {
+            return Bond::Price::Type::Dirty;
+        }
+        QL_FAIL("Failed to convert [" << priceType << "] to a bond price quote type (e.g. \"clean\", \"dirty\")");
+    }
+}
 
 namespace ore {
 namespace data {
@@ -111,8 +124,6 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
 
         asof_ = asof;
 
-        Size count = 0;
-
         // Build the curve specs
         vector<boost::shared_ptr<CurveSpec>> specs;
         for (const auto& it : params.curveSpecs(configuration.first)) {
@@ -124,8 +135,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
         order(specs, curveConfigs, buildErrors, continueOnError);
         bool swapIndicesBuilt = false;
 
+        Size count;
         // Loop over each spec, build the curve and add it to the MarketImpl container.
-        for (Size count = 0; count < specs.size(); ++count) {
+        for (count = 0; count < specs.size(); ++count) {
 
             auto spec = specs[count];
             LOG("Loading spec " << *spec);
@@ -157,9 +169,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     // We may have to add this spec multiple times (for discounting, yield and forwarding curves)
                     vector<YieldCurveType> yieldCurveTypes = {YieldCurveType::Discount, YieldCurveType::Yield};
                     for (auto& y : yieldCurveTypes) {
-                        MarketObject o = static_cast<MarketObject>(y);
-                        if (params.hasMarketObject(o)) {
-                            for (auto& it : params.mapping(o, configuration.first)) {
+                        auto mktObj = static_cast<MarketObject>(y);
+                        if (params.hasMarketObject(mktObj)) {
+                            for (auto& it : params.mapping(mktObj, configuration.first)) {
                                 if (it.second == spec->name()) {
                                     LOG("Adding YieldCurve(" << it.first << ") with spec " << *ycspec
                                                              << " to configuration " << configuration.first);
@@ -724,12 +736,15 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         if (it.second == spec->name()) {
                             LOG("Adding Security (" << it.first << ") with spec " << *securityspec
                                                     << " to configuration " << configuration.first);
-                            if (!itr->second->spread().empty())
-                                securitySpreads_[make_pair(configuration.first, it.first)] = itr->second->spread();
-                            if (!itr->second->recoveryRate().empty())
-                                recoveryRates_[make_pair(configuration.first, it.first)] = itr->second->recoveryRate();
-                            if (!itr->second->cpr().empty())
-                                cprs_[make_pair(configuration.first, it.first)] = itr->second->cpr();
+                            const auto& security = itr->second;
+                            if (!security->spread().empty())
+                                securitySpreads_[make_pair(configuration.first, it.first)] = security->spread();
+                            if (!security->price().empty())
+                                securityPrices_[make_pair(configuration.first, it.first)] = make_pair(security->price(), priceType(*security));
+                            if (!security->recoveryRate().empty())
+                                recoveryRates_[make_pair(configuration.first, it.first)] = security->recoveryRate();
+                            if (!security->cpr().empty())
+                                cprs_[make_pair(configuration.first, it.first)] = security->cpr();
                         }
                     }
 
@@ -847,7 +862,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 // Assumes we build all yield curves before anything else (which order() does)
                 // Once we have a non-Yield curve spec, we make sure to build all swap indices
                 // add add them to requiredSwapIndices for later.
-                if (swapIndicesBuilt == false && params.hasMarketObject(MarketObject::SwapIndexCurve) &&
+                if (!swapIndicesBuilt && params.hasMarketObject(MarketObject::SwapIndexCurve) &&
                     (count == specs.size() - 1 || specs[count + 1]->baseType() != CurveSpec::CurveType::Yield)) {
                     LOG("building swap indices...");
                     for (const auto& it : params.mapping(MarketObject::SwapIndexCurve, configuration.first)) {
@@ -876,9 +891,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
 
     } // loop over configurations
 
-    if (buildErrors.size() > 0 && !continueOnError) {
+    if (!buildErrors.empty() && !continueOnError) {
         string errStr;
-        for (auto error : buildErrors)
+        for (const auto& error : buildErrors)
             errStr += "(" + error.first + ": " + error.second + "); ";
         QL_FAIL("Cannot build all required curves! Building failed for: " << errStr);
     }

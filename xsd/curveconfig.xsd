@@ -1,4 +1,5 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:include schemaLocation="ore_types.xsd"/>
 
   <xs:element type="curveconfiguration" name="CurveConfiguration"/>
 
@@ -344,6 +345,7 @@
       <xs:element type="xs:string" name="SpreadQuote"/>
       <xs:element type="xs:string" name="RecoveryRateQuote" minOccurs="0"/>
       <xs:element type="xs:string" name="CPRQuote" minOccurs="0"/>
+      <xs:element type="priceQuoteType" name="PriceQuote" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -621,6 +623,14 @@
       <xs:element type="interpolationVariableType" name="InterpolationVariable" minOccurs="0" maxOccurs="1"/>
       <xs:element type="interpolationMethodType" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="priceQuoteType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="type" type="securityQuoteType"/>
+      </xs:extension>
+    </xs:simpleContent>
   </xs:complexType>
 
 </xs:schema>

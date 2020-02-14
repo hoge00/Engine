@@ -104,11 +104,14 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                  boost::shared_ptr<ore::data::Market> market, const std::string& configuration) {
     Date asof = Settings::instance().evaluationDate();
     bool write_discount_factor = market ? true : false;
-    LOG("Writing cashflow rep¡ort for " << asof);
+    LOG("Writing cashflow report for " << asof);
     report.addColumn("TradeId", string())
         .addColumn("Type", string())
         .addColumn("CashflowNo", Size())
         .addColumn("LegNo", Size())
+        .addColumn("StartDate", Date())
+        .addColumn("EndDate", Date())
+        .addColumn("IDays", Size())
         .addColumn("PayDate", Date())
         .addColumn("FlowType", string())
         .addColumn("Amount", double(), 4)
@@ -141,13 +144,15 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                     discountCurve = market->discountCurve(ccy, configuration);
                 for (size_t j = 0; j < leg.size(); j++) {
                     boost::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
-                    Date payDate = ptrFlow->date();
+                    auto payDate = ptrFlow->date();
+                    Date startDate;
+                    Date endDate;
+                    auto accrualDays = Size(0);
                     if (payDate >= asof) {
                         Real amount = ptrFlow->amount();
                         string flowType = "";
                         if (payer)
                             amount *= -1.0;
-                        std::string ccy = trades[k]->legCurrencies()[i];
                         boost::shared_ptr<QuantLib::Coupon> ptrCoupon =
                             boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
                         Real coupon;
@@ -157,6 +162,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             coupon = ptrCoupon->rate();
                             accrual = ptrCoupon->accrualPeriod();
                             notional = ptrCoupon->nominal();
+                            startDate = ptrCoupon->accrualStartDate();
+                            endDate = ptrCoupon->accrualEndDate();
+                            accrualDays = ptrCoupon->accrualDays();
                             flowType = "Interest";
                         } else {
                             coupon = Null<Real>();
@@ -209,6 +217,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             .add(trades[k]->tradeType())
                             .add(j + 1)
                             .add(i)
+                            .add(startDate)
+                            .add(endDate)
+                            .add(accrualDays)
                             .add(payDate)
                             .add(flowType)
                             .add(amount)
@@ -681,7 +692,6 @@ void ReportWriter::writeStatistics(Report& report,
                                    boost::shared_ptr<Market> market,
                                    const string& configuration) {
     LOG("portfolio statistics");
-    DayCounter dc = ActualActual();
     report.addColumn("TradeId", string())
           .addColumn("TradeType", string())
           .addColumn("YTM", double(), 6)

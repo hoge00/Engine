@@ -449,7 +449,19 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     case MarketDatum::InstrumentType::BOND: {
         QL_REQUIRE(tokens.size() == 3, "3 tokens expected in " << datumName);
         const string& securityID = tokens[2];
-        return boost::make_shared<SecuritySpreadQuote>(value, asof, datumName, securityID);
+
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::YIELD_SPREAD || quoteType == MarketDatum::QuoteType::PRICE,
+                "Invalid quote type for " << datumName);
+        switch (quoteType) {
+            case MarketDatum::QuoteType::YIELD_SPREAD:
+                return boost::make_shared<SecuritySpreadQuote>(value, asof, datumName, securityID);
+
+            case MarketDatum::QuoteType::PRICE:
+                return boost::make_shared<SecurityPriceQuote>(value, asof, datumName, securityID);
+
+            default:
+                QL_FAIL("quote type [" << tokens[1] << "] not implemented");
+        }
     }
 
     case MarketDatum::InstrumentType::CDS_INDEX: {

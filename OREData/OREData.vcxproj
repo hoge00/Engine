@@ -238,6 +238,7 @@
     <ClCompile Include="ored\model\lgmdata.cpp" />
     <ClCompile Include="ored\model\utilities.cpp" />
     <ClCompile Include="ored\portfolio\bond.cpp" />
+    <ClCompile Include="ored\portfolio\builders\bond.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloor.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloorediborleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\cms.cpp" />

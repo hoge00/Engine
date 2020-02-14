@@ -7,6 +7,7 @@ libOREDataPortfolioBuilders_la_LDFLAGS = -release $(PACKAGE_VERSION)
 libOREDataPortfolioBuilders_la_LIBADD =
 
 libOREDataPortfolioBuilders_la_SOURCES = \
+    bond.cpp \
 	capfloor.cpp \
 	capfloorediborleg.cpp \
 	swaption.cpp \

@@ -32,24 +32,28 @@
 namespace ore {
 namespace data {
 
-//! Wrapper class for holding Bond Spread and recovery rate quotes
+//! Wrapper class for holding Bond Spread, price and recovery rate quotes
 /*!
   \ingroup marketdata
 */
 class Security {
 public:
     //! Constructor
-    Security(const Date& asof, SecuritySpec spec, const Loader& loader, const CurveConfigurations& curveConfigs);
+    Security(const Date& asof, const SecuritySpec& spec, const Loader& loader, const CurveConfigurations& curveConfigs);
 
     //! Inspector
     Handle<Quote> spread() const { return spread_; }
     Handle<Quote> recoveryRate() const { return recoveryRate_; }
     Handle<Quote> cpr() const { return cpr_; }
+    Handle<Quote> price() const { return price_; }
+    const string& priceType() const { return priceType_; }
 
 private:
     Handle<Quote> spread_;
     Handle<Quote> recoveryRate_;
     Handle<Quote> cpr_;
+    Handle<Quote> price_;
+    string priceType_;
 };
 } // namespace data
 } // namespace ore

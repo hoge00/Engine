@@ -100,6 +100,16 @@ public:
     EngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes)
         : model_(model), engine_(engine), tradeTypes_(tradeTypes) {}
 
+    /*! Constructor that takes a model and engine name and a trade type/instrument styles(s) association
+     *  The EngineBuilder defined with these parameters can be looked up with model/engine/f(t,s_i), i=0,n
+     *  where t is one trade type and s_i are the instrument styles of t the builder can create engines for.
+     *  The function f(x,y) creates a unique identifier for the trade type / instrument style association.
+     *  @param model the model name
+     *  @param engine the engine name
+     *  @param typesAndStyles the association of trade type to instrument type(s)
+     */
+    EngineBuilder(const string& model, const string& engine, const map<string, set<string>>& typesAndStyles);
+
     //! Virtual destructor
     virtual ~EngineBuilder() {}
 
@@ -197,7 +207,7 @@ public:
 
         The factory will call EngineBuilder::init() before returning it.
      */
-    boost::shared_ptr<EngineBuilder> builder(const string& tradeType);
+    boost::shared_ptr<EngineBuilder> builder(const string& tradeType, const string& instrumentStyle = "");
 
     //! Register a leg builder with the factory
     void registerLegBuilder(const boost::shared_ptr<LegBuilder>& legBuilder);

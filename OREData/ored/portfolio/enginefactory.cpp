@@ -17,8 +17,8 @@
 */
 
 #include <boost/make_shared.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include <ored/portfolio/builders/bond.hpp>
-#include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
@@ -61,7 +61,25 @@ std::string getParameter(const std::map<std::string, std::string>& m, const std:
     }
     return defaultValue;
 }
+
+std::string combineTypeAndStyle(const std::string& type, const std::string& style) {
+    return style.empty() ? type : type + "," + style;
+}
+
 } // namespace
+
+EngineBuilder::EngineBuilder(const string &model, const string &engine, const map<string, set<string>>& typesAndStyles)
+: model_(model), engine_(engine), tradeTypes_() {
+    set<string> tradeTypes;
+    for_each(typesAndStyles.begin(), typesAndStyles.end(), [&tradeTypes] (const pair<string, set<string>> &entry) {
+        const auto& type = entry.first;
+        const auto& styles = entry.second;
+        for_each(styles.begin(), styles.end(), [&type, &tradeTypes] (const string& style) {
+            tradeTypes.insert(combineTypeAndStyle(type, style));
+        });
+    });
+    tradeTypes_ = tradeTypes;
+}
 
 std::string EngineBuilder::engineParameter(const std::string& p, const std::string qualifier, const bool mandatory,
                                            const std::string& defaultValue) {
@@ -87,31 +105,33 @@ EngineFactory::EngineFactory(const boost::shared_ptr<EngineData>& engineData, co
 void EngineFactory::registerBuilder(const boost::shared_ptr<EngineBuilder>& builder) {
     const string& modelName = builder->model();
     const string& engineName = builder->engine();
-    LOG("EngineFactory registering builder for model:" << modelName << " and engine:" << engineName);
+    auto tradetypes = boost::algorithm::join(builder->tradeTypes(), ",");
+    LOG("EngineFactory registering builder for model:" << modelName << " and engine:" << engineName << " for types: " << tradetypes);
     builders_[make_tuple(modelName, engineName, builder->tradeTypes())] = builder;
 }
 
-boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType) {
+boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType, const string& instrumentStyle) {
+    auto lookup = combineTypeAndStyle(tradeType, instrumentStyle);
     // Check that we have a model/engine for tradetype
-    QL_REQUIRE(engineData_->hasProduct(tradeType),
-               "No Pricing Engine configuration was provided for trade type " << tradeType);
+    QL_REQUIRE(engineData_->hasProduct(lookup),
+               "No Pricing Engine configuration was provided for trade type " << lookup);
 
     // Find a builder for the model/engine/tradeType
-    const string& model = engineData_->model(tradeType);
-    const string& engine = engineData_->engine(tradeType);
+    const string& model = engineData_->model(lookup);
+    const string& engine = engineData_->engine(lookup);
     typedef pair<tuple<string, string, set<string>>, boost::shared_ptr<EngineBuilder>> map_type;
     auto it =
-        std::find_if(builders_.begin(), builders_.end(), [&model, &engine, &tradeType](const map_type& v) -> bool {
+        std::find_if(builders_.begin(), builders_.end(), [&model, &engine, &lookup](const map_type& v) -> bool {
             const set<string>& types = std::get<2>(v.first);
             return std::get<0>(v.first) == model && std::get<1>(v.first) == engine &&
-                   std::find(types.begin(), types.end(), tradeType) != types.end();
+                   std::find(types.begin(), types.end(), lookup) != types.end();
         });
-    QL_REQUIRE(it != builders_.end(), "No EngineBuilder for " << model << "/" << engine << "/" << tradeType);
+    QL_REQUIRE(it != builders_.end(), "No EngineBuilder for " << model << "/" << engine << "/" << lookup);
 
     boost::shared_ptr<EngineBuilder> builder = it->second;
 
-    builder->init(market_, configurations_, engineData_->modelParameters(tradeType),
-                  engineData_->engineParameters(tradeType), engineData_->globalParameters());
+    builder->init(market_, configurations_, engineData_->modelParameters(lookup),
+                  engineData_->engineParameters(lookup), engineData_->globalParameters());
 
     return builder;
 }
@@ -156,7 +176,8 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
     registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
 
-    registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>()); 
+    registerBuilder(boost::make_shared<DiscountingBondEngineBuilder>());
+    registerBuilder(boost::make_shared<MtmImpliedBondEngineBuilder>());
 
     registerBuilder(boost::make_shared<AnalyticHaganCmsCouponPricerBuilder>());
     registerBuilder(boost::make_shared<NumericalHaganCmsCouponPricerBuilder>());
