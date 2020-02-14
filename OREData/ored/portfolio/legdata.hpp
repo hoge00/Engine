@@ -572,15 +572,13 @@ public:
 
     Rate wac() const { return wac_; }
     Rate serviceFee() const { return serviceFee_; }
-    bool isDiscretePayGrid() const { return discretePayGrid_; }
     Rate effectiveCoupon() const;
+    const std::string& cprReference() const { return cprReference_; }
 
 private:
     Rate wac_;
     Rate serviceFee_;
-    string payFreq_;
-    string loanTenor_;
-    bool discretePayGrid_;
+    string cprReference_;
 };
 
 //! Serializable object holding amortization rules
@@ -724,7 +722,7 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
 Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
                             const boost::shared_ptr<EngineFactory>& engineFactory);
 Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<QuantExt::EquityIndex>& equityCurve);
-Leg makeAgencyMBSLeg(const LegData& data, const AgencyMBSLegData& agencyMBSData);
+Leg makeAgencyMBSLeg(const LegData& data, const AgencyMBSLegData& agencyMBSData, const Handle<Quote>& cpr);
 
 Real currentNotional(const Leg& leg);
 
@@ -766,11 +764,6 @@ vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notio
 // apply amortisation to given notionals
 void applyAmortization(std::vector<Real>& notionals, const LegData& data, const Schedule& schedule,
                        const bool annuityAllowed = false, const std::vector<Real>& rates = std::vector<Real>());
-
-// apply amortisation to given notionals
-void applyAmortization(std::vector<Real>& notionals, const std::vector<AmortizationData>& amortData, const LegData& data,
-                       const Schedule& schedule, const bool annuityAllowed = false,
-                       const std::vector<Real>& rates = std::vector<Real>());
 
 } // namespace data
 } // namespace ore

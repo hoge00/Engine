@@ -69,7 +69,6 @@ portfolio/builders/capfloorediborleg.cpp
 portfolio/builders/cms.cpp
 portfolio/builders/cmsspread.cpp
 portfolio/builders/commodityoption.cpp
-portfolio/builders/mbs.cpp
 portfolio/builders/swaption.cpp
 portfolio/builders/yoycapfloor.cpp
 portfolio/capfloor.cpp
@@ -91,7 +90,6 @@ portfolio/fxswap.cpp
 portfolio/legbuilders.cpp
 portfolio/legdata.cpp
 portfolio/mbs.cpp
-portfolio/mbsdata.cpp
 portfolio/nettingsetdefinition.cpp
 portfolio/nettingsetmanager.cpp
 portfolio/optiondata.cpp
@@ -205,7 +203,6 @@ portfolio/builders/equityforward.hpp
 portfolio/builders/equityoption.hpp
 portfolio/builders/fxforward.hpp
 portfolio/builders/fxoption.hpp
-portfolio/builders/mbs.hpp
 portfolio/builders/swap.hpp
 portfolio/builders/swaption.hpp
 portfolio/builders/yoycapfloor.hpp
@@ -229,7 +226,6 @@ portfolio/instrumentwrapper.hpp
 portfolio/legbuilders.hpp
 portfolio/legdata.hpp
 portfolio/mbs.hpp
-portfolio/mbsdata.hpp
 portfolio/nettingsetdefinition.hpp
 portfolio/nettingsetmanager.hpp
 portfolio/optiondata.hpp

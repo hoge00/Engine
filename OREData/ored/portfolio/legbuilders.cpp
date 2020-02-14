@@ -130,7 +130,11 @@ Leg AgencyMBSLegBuilder::buildLeg(const LegData &data, const boost::shared_ptr<E
                                   const string &configuration) const {
     auto agencyMBSData = boost::dynamic_pointer_cast<AgencyMBSLegData>(data.concreteLegData());
     QL_REQUIRE(agencyMBSData, "Wrong LegType, expected AgencyMBS");
-    return makeAgencyMBSLeg(data, *agencyMBSData);
+    auto cpr = Handle<Quote>{};
+    if (!agencyMBSData->cprReference().empty()) {
+        cpr = engineFactory->market()->cpr(agencyMBSData->cprReference());
+    }
+    return makeAgencyMBSLeg(data, *agencyMBSData, cpr);
 }
 
 } // namespace data

@@ -10,8 +10,6 @@
       </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
-    <MBSData>
-    </MBSData>
     <BondData>
       <IssuerId>CPTY_C</IssuerId>
       <SecurityId>GNMA_MBS1</SecurityId>
@@ -31,6 +29,7 @@
         <AgencyMBSLegData>
           <WAC>0.06</WAC>
           <ServiceFee>0.005</ServiceFee>
+          <CPR>FIXEDBOND1</CPR>
         </AgencyMBSLegData>
         <ScheduleData>
           <Rules>

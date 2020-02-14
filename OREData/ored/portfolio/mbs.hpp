@@ -26,7 +26,6 @@ namespace ore {
 namespace data {
 
 class Bond;
-class MBSData;
 
 //! Serializable MBS
 /*!
@@ -44,9 +43,6 @@ public:
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
-
-private:
-    std::unique_ptr<MBSData> data_;
 };
 
 } // namespace data

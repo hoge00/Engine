@@ -71,7 +71,7 @@ DiscountingBondEngineBuilder::DiscountingBondEngineBuilder()
     : DiscountingBondEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngine") {}
 
 DiscountingBondEngineBuilder::DiscountingBondEngineBuilder(const std::string& model, const std::string& engine)
-    : AbstractDiscountingBondEngineBuilder(model, engine, std::set<string> {"Bond", "MBS"}) {} // TODO: Remove MBS
+    : AbstractDiscountingBondEngineBuilder(model, engine, std::set<string> {"Bond", "MBS"}) {}
 
 string DiscountingBondEngineBuilder::keyImpl(const BondEngineBuilderArgs& args) {
     auto tokens = { args.ccy().code(), args.creditCurveId(), args.securityId(), args.referenceCurveId() };

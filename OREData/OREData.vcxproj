@@ -121,7 +121,6 @@
     <ClInclude Include="ored\portfolio\builders\equityoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\fxforward.hpp" />
     <ClInclude Include="ored\portfolio\builders\fxoption.hpp" />
-    <ClCompile Include="ored\portfolio\builders\mbs.hpp" />
     <ClInclude Include="ored\portfolio\builders\swap.hpp" />
     <ClInclude Include="ored\portfolio\builders\swaption.hpp" />
     <ClInclude Include="ored\portfolio\builders\yoycapfloor.hpp" />
@@ -145,7 +144,6 @@
     <ClInclude Include="ored\portfolio\legbuilders.hpp" />
     <ClInclude Include="ored\portfolio\legdata.hpp" />
     <ClCompile Include="ored\portfolio\mbs.hpp" />
-    <ClCompile Include="ored\portfolio\mbsdata.hpp" />
     <ClInclude Include="ored\portfolio\nettingsetdefinition.hpp" />
     <ClInclude Include="ored\portfolio\nettingsetmanager.hpp" />
     <ClInclude Include="ored\portfolio\optiondata.hpp" />
@@ -247,7 +245,6 @@
     <ClCompile Include="ored\portfolio\builders\cms.cpp" />
     <ClCompile Include="ored\portfolio\builders\cmsspread.cpp" />
     <ClCompile Include="ored\portfolio\builders\commodityoption.cpp" />
-    <ClCompile Include="ored\portfolio\builders\mbs.cpp" />
     <ClCompile Include="ored\portfolio\builders\swaption.cpp" />
     <ClCompile Include="ored\portfolio\builders\yoycapfloor.cpp" />
     <ClCompile Include="ored\portfolio\capfloor.cpp" />
@@ -269,7 +266,6 @@
     <ClCompile Include="ored\portfolio\legbuilders.cpp" />
     <ClCompile Include="ored\portfolio\legdata.cpp" />
     <ClCompile Include="ored\portfolio\mbs.cpp" />
-    <ClCompile Include="ored\portfolio\mbsdata.cpp" />
     <ClCompile Include="ored\portfolio\nettingsetdefinition.cpp" />
     <ClCompile Include="ored\portfolio\nettingsetmanager.cpp" />
     <ClCompile Include="ored\portfolio\optiondata.cpp" />

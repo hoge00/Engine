@@ -55,6 +55,63 @@
 using namespace QuantLib;
 using namespace QuantExt;
 
+namespace {
+
+    Real calculateAnnuity(Real startNotional,
+                          Rate rate,
+                          Frequency payFrequency,
+                          const DayCounter& rateDayCounter,
+                          const Date& start,
+                          const Date& end) {
+        // TODO: Check the compounding type, but FixedRateLeg in its current implementation defaults to 'Simple'
+        InterestRate convertedRate{ rate, rateDayCounter, Compounded, payFrequency };
+        Real compoundFactor = convertedRate.compoundFactor(start, end);
+        // TODO: Convert rate using QL functions
+        Rate periodRate = rate / payFrequency;
+        Real annuity = periodRate * startNotional * compoundFactor / (compoundFactor - 1.);
+        DLOG("Calculated an annuity of [" << annuity << "]");
+        return annuity;
+    }
+
+    std::vector<double> buildAmortizationScheduleForMBS(const std::vector<double>& notionals,
+                                                        const Schedule& schedule,
+                                                        const ore::data::AgencyMBSLegData& agencyMBSData,
+                                                        const DayCounter& rateDayCounter,
+                                                        const Handle<Quote>& cprHnd = Handle<Quote>{}) {
+        Frequency frequency = schedule.tenor().frequency();
+        QL_REQUIRE(frequency >= 1 && frequency <= 395, "Frequency f must satisfy: 1 <= f <= 395");
+        QL_REQUIRE(!notionals.empty(), "Must have at least one notional value");
+
+        // The (initial) annuity is based on the WAC, that is the service fee is not deducted (the service fee is
+        // for servicing the MBS not for servicing the loans). The annuity is comprised of the interest and principal
+        // payments by the mortgage holders. Principal payments are paid out to pass-through investors 1:1, but interest
+        // payments paid to pass-through investors are reduced by the service fee.
+        Real initialAnnuity = calculateAnnuity(notionals[0], agencyMBSData.wac(), frequency, rateDayCounter,
+                                               schedule.startDate(), schedule.endDate());
+
+        Rate cpr = cprHnd.empty() ? 0 : cprHnd->value();
+
+        DLOG("Build MBS notional schedule");
+        std::vector<double> nominals = ore::data::normaliseToSchedule(notionals, schedule);
+        Real rate = agencyMBSData.wac();
+
+        Real totalPayment = initialAnnuity;
+        for (Size i = 0; i < schedule.size() - 1; i++) {
+            Real yf_period = rateDayCounter.yearFraction(schedule[i], schedule[i + 1]);
+            Real amort = totalPayment - rate * nominals[i] * yf_period;
+            Real scheduledBalance = nominals[i] - amort;
+            Real smm = 1. - ::pow(1. - cpr, 1./Real(frequency));
+            totalPayment *= (1. - smm);
+            Real prepayment = scheduledBalance * smm;
+            nominals[i+1] = scheduledBalance - prepayment;
+        }
+
+        DLOG("MBS notional schedule done");
+        return nominals;
+    }
+
+}
+
 namespace ore {
 namespace data {
 
@@ -376,7 +433,7 @@ void AgencyMBSLegData::fromXML(XMLNode *node) {
     XMLUtils::checkNode(node, legNodeName());
     wac_ = XMLUtils::getChildValueAsDouble(node, "WAC", true);
     serviceFee_ = XMLUtils::getChildValueAsDouble(node, "ServiceFee", false);
-    discretePayGrid_ = XMLUtils::getChildValueAsBool(node, "DiscretePaymentGrid", false);
+    cprReference_ = XMLUtils::getChildValue(node, "CPR", false);
 }
 
 Rate AgencyMBSLegData::effectiveCoupon() const {
@@ -1271,39 +1328,25 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     return leg;
 }
 
-Leg makeAgencyMBSLeg(const LegData &data, const AgencyMBSLegData& agencyMBSData) {
+Leg makeAgencyMBSLeg(const LegData &data, const AgencyMBSLegData& agencyMBSData, const Handle<Quote>& cpr) {
     Schedule schedule = makeSchedule(data.schedule());
-    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    QL_REQUIRE(!notionals.empty(), "Must have at least one notional value");
-    Real startNotional = notionals[0];
-    Frequency frequency = schedule.tenor().frequency();
-    QL_REQUIRE(frequency >= 1 && frequency <= 395, "Frequency f must satisfy: 1 <= f <= 395");
     DayCounter dc = parseDayCounter(data.dayCounter());
-
-    //TODO: Check the compounding type, but FixedRateLeg in its current implementation defaults to 'Simple'
-    InterestRate convertedRate{agencyMBSData.wac(), dc, Compounded, frequency};
-    Real compoundFactor = convertedRate.compoundFactor(schedule.startDate(), schedule.endDate());
-    // TODO: Convert rate using QL functions
-    Rate periodRate = agencyMBSData.wac() / frequency;
-    Real annuity = periodRate * startNotional * compoundFactor / (compoundFactor - 1.);
-    DLOG("Calculated an annuity of [" << annuity << "]");
-    DLOG("Using effective rate [" << agencyMBSData.effectiveCoupon() << "]");
-
-    // The 'effective' coupon is the remainder of the WAC that is paid to investors, that is the service fee is already removed from it
-    vector<double> rates = buildScheduledVector({  agencyMBSData.effectiveCoupon() }, {}, schedule);
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     Natural paymentLag = data.paymentLag();
     const Calendar& paymentCalendar = schedule.calendar();
 
-    AmortizationData amortizationData("Annuity", annuity, to_string(schedule.startDate()), to_string(schedule.endDate()), "", false);
-    applyAmortization(notionals, { amortizationData }, data, schedule, true, rates);
-    Leg leg = FixedRateLeg(schedule)
-            .withNotionals(notionals)
+    // The 'effective' coupon is the remainder of the WAC that is paid to investors, that is the service fee is already removed from it
+    DLOG("Using effective rate [" << agencyMBSData.effectiveCoupon() << "]");
+    vector<double> rates = buildScheduledVector({  agencyMBSData.effectiveCoupon() }, {}, schedule);
+    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
+    vector<double> remainingBalances = buildAmortizationScheduleForMBS(notionals, schedule, agencyMBSData, dc, cpr);
+
+    return FixedRateLeg(schedule)
+            .withNotionals(remainingBalances)
             .withCouponRates(rates, dc)
             .withPaymentAdjustment(bdc)
             .withPaymentLag(paymentLag)
             .withPaymentCalendar(paymentCalendar);
-    return leg;
 }
 
 Real currentNotional(const Leg& leg) {
@@ -1490,13 +1533,8 @@ vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notio
 
 void applyAmortization(std::vector<Real>& notionals, const LegData& data, const Schedule& schedule,
                        const bool annuityAllowed, const std::vector<Real>& rates) {
-    return applyAmortization(notionals, data.amortizationData(), data, schedule, annuityAllowed, rates);
-}
-
-void applyAmortization(std::vector<Real>& notionals, const std::vector<AmortizationData>& amortData, const LegData& data,
-                       const Schedule& schedule, const bool annuityAllowed, const std::vector<Real>& rates) {
     Date lastEndDate = Date::minDate();
-    for (auto const& amort : amortData) {
+    for (auto const& amort : data.amortizationData()) {
         if (!amort.initialized())
             continue;
         Date startDate = parseDate(amort.startDate());
@@ -1521,7 +1559,7 @@ void applyAmortization(std::vector<Real>& notionals, const std::vector<Amortizat
         // check that for a floating leg we only have one amortization block, if the type is annuity
         // we recognise a floating leg by an empty (fixed) rates vector
         if (rates.empty() && amortizationType == AmortizationType::Annuity) {
-            QL_REQUIRE(amortData.size() == 1,
+            QL_REQUIRE(data.amortizationData().size() == 1,
                        "Floating Leg supports only one amortisation block of type Annuity");
         }
     }
