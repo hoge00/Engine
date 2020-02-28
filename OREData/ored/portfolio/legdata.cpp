@@ -96,14 +96,14 @@ namespace {
         Real rate = agencyMBSData.wac();
 
         Real totalPayment = initialAnnuity;
-        for (Size i = 0; i < schedule.size() - 1; i++) {
+        for (Size i = 0; i < schedule.size() - 2; i++) {
             Real yf_period = rateDayCounter.yearFraction(schedule[i], schedule[i + 1]);
             Real amort = totalPayment - rate * nominals[i] * yf_period;
             Real scheduledBalance = nominals[i] - amort;
             Real smm = 1. - ::pow(1. - cpr, 1./Real(frequency));
             totalPayment *= (1. - smm);
             Real prepayment = scheduledBalance * smm;
-            nominals[i+1] = scheduledBalance - prepayment;
+            nominals[i + 1] = scheduledBalance - prepayment;
         }
 
         DLOG("MBS notional schedule done");
