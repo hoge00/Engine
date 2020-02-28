@@ -48,7 +48,6 @@ instruments/fxforward.cpp
 instruments/impliedbondspread.cpp
 instruments/makeaverageois.cpp
 instruments/makecds.cpp
-instruments/mortgagebond.cpp
 instruments/oibasisswap.cpp
 instruments/oiccbasisswap.cpp
 instruments/payment.cpp
@@ -239,7 +238,6 @@ instruments/fxforward.hpp
 instruments/impliedbondspread.hpp
 instruments/makeaverageois.hpp
 instruments/makecds.hpp
-instruments/mortgagebond.hpp
 instruments/oibasisswap.hpp
 instruments/oiccbasisswap.hpp
 instruments/payment.hpp
