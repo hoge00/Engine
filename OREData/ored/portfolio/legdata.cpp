@@ -55,6 +55,63 @@
 using namespace QuantLib;
 using namespace QuantExt;
 
+namespace {
+
+    Real calculateAnnuity(Real startNotional,
+                          Rate rate,
+                          Frequency payFrequency,
+                          const DayCounter& rateDayCounter,
+                          const Date& start,
+                          const Date& end) {
+        // TODO: Check the compounding type, but FixedRateLeg in its current implementation defaults to 'Simple'
+        InterestRate convertedRate{ rate, rateDayCounter, Compounded, payFrequency };
+        Real compoundFactor = convertedRate.compoundFactor(start, end);
+        // TODO: Convert rate using QL functions
+        Rate periodRate = rate / payFrequency;
+        Real annuity = periodRate * startNotional * compoundFactor / (compoundFactor - 1.);
+        DLOG("Calculated an annuity of [" << annuity << "]");
+        return annuity;
+    }
+
+    std::vector<double> buildAmortizationScheduleForMBS(const std::vector<double>& notionals,
+                                                        const Schedule& schedule,
+                                                        const ore::data::AgencyMBSLegData& agencyMBSData,
+                                                        const DayCounter& rateDayCounter,
+                                                        const Handle<Quote>& cprHnd = Handle<Quote>{}) {
+        Frequency frequency = schedule.tenor().frequency();
+        QL_REQUIRE(frequency >= 1 && frequency <= 395, "Frequency f must satisfy: 1 <= f <= 395");
+        QL_REQUIRE(!notionals.empty(), "Must have at least one notional value");
+
+        // The (initial) annuity is based on the WAC, that is the service fee is not deducted (the service fee is
+        // for servicing the MBS not for servicing the loans). The annuity is comprised of the interest and principal
+        // payments by the mortgage holders. Principal payments are paid out to pass-through investors 1:1, but interest
+        // payments paid to pass-through investors are reduced by the service fee.
+        Real initialAnnuity = calculateAnnuity(notionals[0], agencyMBSData.wac(), frequency, rateDayCounter,
+                                               schedule.startDate(), schedule.endDate());
+
+        Rate cpr = cprHnd.empty() ? 0 : cprHnd->value();
+
+        DLOG("Build MBS notional schedule");
+        std::vector<double> nominals = ore::data::normaliseToSchedule(notionals, schedule);
+        Real rate = agencyMBSData.wac();
+
+        Real totalPayment = initialAnnuity;
+        for (Size i = 0; i < schedule.size() - 1; i++) {
+            Real yf_period = rateDayCounter.yearFraction(schedule[i], schedule[i + 1]);
+            Real amort = totalPayment - rate * nominals[i] * yf_period;
+            Real scheduledBalance = nominals[i] - amort;
+            Real smm = 1. - ::pow(1. - cpr, 1./Real(frequency));
+            totalPayment *= (1. - smm);
+            Real prepayment = scheduledBalance * smm;
+            nominals[i+1] = scheduledBalance - prepayment;
+        }
+
+        DLOG("MBS notional schedule done");
+        return nominals;
+    }
+
+}
+
 namespace ore {
 namespace data {
 
@@ -366,6 +423,24 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
+XMLNode *AgencyMBSLegData::toXML(XMLDocument &doc) {
+    // TODO
+    QL_FAIL("Not implemented");
+    return nullptr;
+}
+
+void AgencyMBSLegData::fromXML(XMLNode *node) {
+    XMLUtils::checkNode(node, legNodeName());
+    wac_ = XMLUtils::getChildValueAsDouble(node, "WAC", true);
+    serviceFee_ = XMLUtils::getChildValueAsDouble(node, "ServiceFee", false);
+    cprReference_ = XMLUtils::getChildValue(node, "CPR", false);
+}
+
+Rate AgencyMBSLegData::effectiveCoupon() const {
+    QL_REQUIRE(wac_ > serviceFee_, "WAC must be larger than servicing fee");
+    return wac_ - serviceFee_;
+}
+
 void AmortizationData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "AmortizationData");
     type_ = XMLUtils::getChildValue(node, "Type");
@@ -487,6 +562,8 @@ boost::shared_ptr<LegAdditionalData> LegData::initialiseConcreteLegData(const st
         return boost::make_shared<DigitalCMSSpreadLegData>();
     } else if (legType == "Equity") {
         return boost::make_shared<EquityLegData>();
+    } else if (legType == "AgencyMBS") {
+        return boost::make_shared<AgencyMBSLegData>();
     } else {
         QL_FAIL("Unkown leg type " << legType);
     }
@@ -1251,6 +1328,27 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     return leg;
 }
 
+Leg makeAgencyMBSLeg(const LegData &data, const AgencyMBSLegData& agencyMBSData, const Handle<Quote>& cpr) {
+    Schedule schedule = makeSchedule(data.schedule());
+    DayCounter dc = parseDayCounter(data.dayCounter());
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    Natural paymentLag = data.paymentLag();
+    const Calendar& paymentCalendar = schedule.calendar();
+
+    // The 'effective' coupon is the remainder of the WAC that is paid to investors, that is the service fee is already removed from it
+    DLOG("Using effective rate [" << agencyMBSData.effectiveCoupon() << "]");
+    vector<double> rates = buildScheduledVector({  agencyMBSData.effectiveCoupon() }, {}, schedule);
+    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
+    vector<double> remainingBalances = buildAmortizationScheduleForMBS(notionals, schedule, agencyMBSData, dc, cpr);
+
+    return FixedRateLeg(schedule)
+            .withNotionals(remainingBalances)
+            .withCouponRates(rates, dc)
+            .withPaymentAdjustment(bdc)
+            .withPaymentLag(paymentLag)
+            .withPaymentCalendar(paymentCalendar);
+}
+
 Real currentNotional(const Leg& leg) {
     Date today = Settings::instance().evaluationDate();
     // assume the leg is sorted
@@ -1432,7 +1530,7 @@ vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notio
     LOG("Fixed Annuity notional schedule done");
     return nominals;
 }
-  
+
 void applyAmortization(std::vector<Real>& notionals, const LegData& data, const Schedule& schedule,
                        const bool annuityAllowed, const std::vector<Real>& rates) {
     Date lastEndDate = Date::minDate();

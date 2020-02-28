@@ -53,6 +53,11 @@ namespace data {
 
 AbstractDiscountingBondEngineBuilder::AbstractDiscountingBondEngineBuilder(const std::string &model,
                                                                            const std::string &engine,
+                                                                           const std::set<std::string>& types)
+    : CachingEngineBuilder(model, engine, types) {}
+
+AbstractDiscountingBondEngineBuilder::AbstractDiscountingBondEngineBuilder(const std::string &model,
+                                                                           const std::string &engine,
                                                                            const std::string& type)
     : CachingEngineBuilder(model, engine, { type }) {}
 
@@ -66,7 +71,7 @@ DiscountingBondEngineBuilder::DiscountingBondEngineBuilder()
     : DiscountingBondEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngine") {}
 
 DiscountingBondEngineBuilder::DiscountingBondEngineBuilder(const std::string& model, const std::string& engine)
-    : AbstractDiscountingBondEngineBuilder(model, engine, "Bond") {}
+    : AbstractDiscountingBondEngineBuilder(model, engine, std::set<string> {"Bond", "MBS"}) {}
 
 string DiscountingBondEngineBuilder::keyImpl(const BondEngineBuilderArgs& args) {
     auto tokens = { args.ccy().code(), args.creditCurveId(), args.securityId(), args.referenceCurveId() };

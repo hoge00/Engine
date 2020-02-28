@@ -18,6 +18,9 @@
 
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/utilities/to_string.hpp>
+
+#include <ql/cashflows/fixedratecoupon.hpp>
 
 namespace ore {
 namespace data {
@@ -121,6 +124,17 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
     string eqName = eqData->eqName();
     auto eqCurve = *engineFactory->market()->equityCurve(eqName, configuration);
     return makeEquityLeg(data, eqCurve);
+}
+
+Leg AgencyMBSLegBuilder::buildLeg(const LegData &data, const boost::shared_ptr<EngineFactory> &engineFactory,
+                                  const string &configuration) const {
+    auto agencyMBSData = boost::dynamic_pointer_cast<AgencyMBSLegData>(data.concreteLegData());
+    QL_REQUIRE(agencyMBSData, "Wrong LegType, expected AgencyMBS");
+    auto cpr = Handle<Quote>{};
+    if (!agencyMBSData->cprReference().empty()) {
+        cpr = engineFactory->market()->cpr(agencyMBSData->cprReference());
+    }
+    return makeAgencyMBSLeg(data, *agencyMBSData, cpr);
 }
 
 } // namespace data

@@ -6,6 +6,7 @@
       <CurveDescription>FixedBond1Price</CurveDescription>
       <PriceQuote type="clean">BOND/PRICE/FIXEDBOND1</PriceQuote>
       <SpreadQuote>BOND/YIELD_SPREAD/FIXEDBOND1</SpreadQuote>
+      <CPRQuote>CPR/RATE/FIXEDBOND1</CPRQuote>
     </Security>
   </Securities>
   <YieldCurves>

@@ -112,6 +112,7 @@
 #include <ored/portfolio/instrumentwrapper.hpp>
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/mbs.hpp>
 #include <ored/portfolio/nettingsetdefinition.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/portfolio/optiondata.hpp>
