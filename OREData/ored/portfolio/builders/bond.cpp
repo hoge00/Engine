@@ -132,14 +132,14 @@ boost::shared_ptr<PricingEngine> MtmImpliedBondEngineBuilder::engineImpl(const B
     auto yts = market_->yieldCurve(args.referenceCurveId(), configuration(MarketContext::pricing));
     // Fetching bond
     auto bond = args.bond();
-    auto dcc = yts->dayCounter();
     // Assuming annual continuous compounding
     auto zspread = BondFunctions::zSpread(*bond,
                                           price->value(),
                                           yts.currentLink(),
                                           yts->dayCounter(),
                                           Compounding::Continuous,
-                                          Frequency::Annual);
+                                          Frequency::Annual,
+		                                  yts->referenceDate());
 
     DLOG("Implied spread [" << zspread << "] for " << args.securityId())
 

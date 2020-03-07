@@ -429,6 +429,9 @@
     <ClInclude Include="ored\portfolio\builders\capflooredyoyleg.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
+    <ClInclude Include="ored\measures\statisticsdata.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -763,6 +766,18 @@
     </ClCompile>
     <ClCompile Include="ored\marketdata\genericyieldvolcurve.cpp">
       <Filter>marketdata</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\mbs.hpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\mbs.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\measures\statisticsdata.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\bond.cpp">
+      <Filter>portfolio\builders</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
